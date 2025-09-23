@@ -88,7 +88,7 @@ export default function SidebarDemo(props:any) {
                 href: "/Profile",
                 icon: (
                   <img
-                    src="https://avatars.githubusercontent.com/u/15045081?v=4"
+                    src="/user.png"
                     className="h-7 w-7 shrink-0 rounded-full"
                     width={50}
                     height={50}
