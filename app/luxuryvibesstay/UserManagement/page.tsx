@@ -16,9 +16,11 @@ import { cn } from "@/lib/utils";
 import Image from "next/image";
 import { title } from "process";
 import { validateHeaderName } from "http";
+import { useAuth } from '@/lib/context/AuthContext';
 
 export default function Sidebar2(props:any) {
-  
+  const { user } = useAuth();
+    console.log(user);
   const links = [
     {
       label: "Dashboard",
@@ -193,7 +195,7 @@ const addUser = (e:any) => {
         }
 
 const deleteUser = async (email: string) => {
-        // Add confirmation dialog
+        
         if (!window.confirm('Are you sure you want to delete this user?')) {
             return;
         }

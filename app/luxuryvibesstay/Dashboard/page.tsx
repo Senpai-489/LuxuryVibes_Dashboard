@@ -1,10 +1,13 @@
 'use client'
 import React from 'react'
 import SidebarDemo from '../../Components/Sidebar'
+import { useAuth } from '@/lib/context/AuthContext';
+
 
 
 const Dash = () => {
   const [login,setLogin]=React.useState(true)
+  const { user } = useAuth();
   return (
         
         login?

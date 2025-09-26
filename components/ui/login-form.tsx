@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import Image from "next/image"
 import { useState } from "react"
+import { useAuth } from '@/lib/context/AuthContext';
 
 export function LoginForm({
   className,
@@ -14,10 +15,10 @@ export function LoginForm({
   const [emailValue, setEmailValue] = useState("")
   const [passwordValue, setPasswordValue] = useState("")
   const [passWarning, setPassWarning] = useState(false)   
-
-  const login = async (e: React.FormEvent) => {
+const { login } = useAuth();
+  const handleLogin = async (e: React.FormEvent) => {
+   
     e.preventDefault()
-
     try {
       const res = await fetch("http://localhost:5000/api/login", {
         method: "POST",
@@ -31,13 +32,16 @@ export function LoginForm({
       })
 
       const data = await res.json()
-      console.log("Login response:", data.message)
-
+      console.log("Login response:", data)  // Log full response for debugging
+      
       if (res.ok) {
-       
-        window.location.href = "/luxuryvibesstay/Dashboard"
-      } else {
         
+        await login(data);
+        
+        window.location.href = '/luxuryvibesstay/Dashboard';
+        
+      } else {
+        console.error("Login failed:", data.message)
         setPassWarning(true)
       }
     } catch (err) {
@@ -50,7 +54,7 @@ export function LoginForm({
     <div className={cn("flex flex-col gap-6", className)} {...props}>
       <Card className="overflow-hidden p-0">
         <CardContent className="grid p-0 md:grid-cols-2">
-          <form className="p-6 md:p-8" onSubmit={login}>
+          <form className="p-6 md:p-8">
             <div className="flex flex-col gap-6">
               <div className="flex flex-col items-center text-center">
                 <h1 className="text-2xl font-bold">Welcome back</h1>
@@ -95,7 +99,7 @@ export function LoginForm({
                 )}
               </div>
 
-              <Button type="submit" className="w-full">
+              <Button type="submit" onClick={handleLogin} className="w-full">
                 Login
               </Button>
 

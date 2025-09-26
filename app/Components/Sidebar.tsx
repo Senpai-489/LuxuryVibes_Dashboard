@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Sidebar, SidebarBody, SidebarLink } from "../Components/ui/sidebar";
 import {
   IconArrowLeft,
@@ -16,9 +16,26 @@ import { cn } from "@/lib/utils";
 import Image from "next/image";
 import { title } from "process";
 import { validateHeaderName } from "http";
+import { useAuth } from '@/lib/context/AuthContext';
+import { useRouter } from 'next/navigation';
+import { BarChart } from '@mui/x-charts/BarChart';
+import { LineChart, PieChart } from "@mui/x-charts";
+import SimpleLineChart from "./ui/Line";
 
 export default function SidebarDemo(props:any) {
-  
+  const { logout, user } = useAuth();
+  const User = user?.email ? fetch(`http://localhost:5000/api/userinfo/${encodeURIComponent(user.email)}`, {
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json',}
+    }) : null;
+  const router = useRouter();
+
+  const handleLogout = () => {
+    logout();
+    router.push('/');
+  };
+
   const links = [
     {
       label: "Dashboard",
@@ -57,10 +74,11 @@ export default function SidebarDemo(props:any) {
     },
     {
       label: "Logout",
-      href: "#",
+      href:"/",
       icon: (
         <IconArrowLeft className="h-5 w-5 shrink-0 text-neutral-700 dark:text-neutral-200" />
       ),
+      onClick: handleLogout
     },
   ];
   const [open, setOpen] = useState(false);
@@ -84,7 +102,7 @@ export default function SidebarDemo(props:any) {
           <div>
             <SidebarLink
               link={{
-                label: "Amit Singh",
+                label: user?.name || "User",
                 href: "/Profile",
                 icon: (
                   <img
@@ -134,7 +152,7 @@ export const Logo = () => {
         >
           <option value="luxuryvibesstay">Luxury Vibes Stay</option>
           <option value="lakeviewbistro">Lakeview Bistro</option>
-          <option value="rooftop">Rooftop</option>
+          <option value="rooftop">The Village Rooftop</option>
           <option value="pinewoodretreat">Pinewood Retreat</option>
         </select>
    
@@ -258,16 +276,29 @@ const Overview = () => {
           {[...new Array(2)].map((i, idx) => (
             <div
               key={"second-array-demo-1" + idx}
-              className="h-92 w-full rounded-lg bg-gray-100 dark:bg-neutral-800"
-            ></div>
+              className=" w-full rounded-lg bg-gray-100 dark:bg-neutral-800"
+            >
+              <BarChart className="p-4"
+                series={[
+                  {
+                    data: [4, 3, 5, 7, 8],
+                    label: 'Series 1',
+                  }
+                ]}
+                xAxis={[{ data: ['Jan', 'Feb', 'Mar', 'Apr', 'May'] }]}
+                height={300}
+              />
+            </div>
           ))}
         </div>
-        <div className="flex  gap-2">
+        <div className="mt-4 flex  gap-2">
           {[...new Array(2)].map((i, idx) => (
             <div
               key={"second-array-demo-1" + idx}
-              className="h-92 w-full rounded-lg bg-gray-100 dark:bg-neutral-800"
-            ></div>
+              className="p-4 w-full rounded-lg bg-gray-100 dark:bg-neutral-800"
+            >
+              <SimpleLineChart/>
+            </div>
           ))}
         </div>
         </div>
@@ -275,19 +306,50 @@ const Overview = () => {
 }
 
 const Sources = () => {
-  return (<div>
-     <div className="flex gap-2">
-      Sources 
-      </div>
+  return (<div className="h-screen">
+    <div className="flex h-[120vh]  rounded-lg ease-in-out duration-500 bg-gray-100 dark:bg-neutral-800">
+      <PieChart
+      
+      width={800}
+      height={800}
+      series={[
+        {
+        data: [
+          { value: 30, label: 'Meta' },
+          { value: 40, label: 'Google' }, 
+          { value: 30, label: 'WhatsApp' },
+          { value: 20, label: 'WebForm' }
+        ],
+        innerRadius: 100,
+        outerRadius: 300,
+        paddingAngle: 5,
+        cornerRadius: 5,
+        startAngle: 0,
+        endAngle: 360,
+        cx: 300,
+        cy: 400,
+        }
+      ]}
+      />
+    </div>
         </div>
   );
 }
 
 const Timeline = () => {
   return (<div>
-     <div className="flex gap-2">
-      Timeline
-      </div>
+    <div className="flex bg-gray-100 rounded-lg gap-2 h-[80vh]">
+     <LineChart
+    series={[
+      { curve: "step", data: [1, 5, 2, 6, 3, 9.3] },
+      { curve: "step", data: [6, 3, 7, 9.5, 4, 2] },
+    ]}
+    xAxis={[{
+      label: 'Months', 
+      data: [1, 2, 3, 4, 5, 6]
+    }]}
+  />
+     </div>
         </div>
   );
 }
