@@ -2,10 +2,10 @@
 import { createContext, useContext, useState, useEffect } from 'react';
 
 type User = {
+  name: string;
   id: string;
   email: string;
   role: number;
-  name: string;
 };
 
 type AuthContextType = {

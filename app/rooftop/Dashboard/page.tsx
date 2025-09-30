@@ -1,10 +1,19 @@
 'use client'
 import React from 'react'
 import SidebarDemo from '../../Components/Sidebar'
+import { useAuth } from '@/lib/context/AuthContext';
+import { Cookies, useCookies } from 'react-cookie';
+
 
 
 const Dash = () => {
   const [login,setLogin]=React.useState(true)
+  const { user } = useAuth();
+  
+    const [cookies, setcookie] = useCookies(['name','role']);
+    console.log("Cookies in Dashboard:", cookies);
+    
+  
   return (
         
         login?

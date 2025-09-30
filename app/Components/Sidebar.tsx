@@ -21,19 +21,17 @@ import { useRouter } from 'next/navigation';
 import { BarChart } from '@mui/x-charts/BarChart';
 import { LineChart, PieChart } from "@mui/x-charts";
 import SimpleLineChart from "./ui/Line";
-
+import { useCookies } from 'react-cookie';
 export default function SidebarDemo(props:any) {
   const { logout, user } = useAuth();
-  const User = user?.email ? fetch(`http://localhost:5000/api/userinfo/${encodeURIComponent(user.email)}`, {
-    method: 'GET',
-    headers: {
-      'Content-Type': 'application/json',}
-    }) : null;
+  const [cookies, setCookie, removeCookie] = useCookies(['name','role']);
   const router = useRouter();
 
   const handleLogout = () => {
-    logout();
-    router.push('/');
+    removeCookie('name');
+    removeCookie('role');
+    
+    
   };
 
   const links = [
@@ -72,14 +70,7 @@ export default function SidebarDemo(props:any) {
         <IconUser className="h-5 w-5 shrink-0 text-neutral-700 dark:text-neutral-200" />
       ),
     },
-    {
-      label: "Logout",
-      href:"/",
-      icon: (
-        <IconArrowLeft className="h-5 w-5 shrink-0 text-neutral-700 dark:text-neutral-200" />
-      ),
-      onClick: handleLogout
-    },
+   
   ];
   const [open, setOpen] = useState(false);
   return (
@@ -95,15 +86,16 @@ export default function SidebarDemo(props:any) {
             {open ? <Logo /> : <LogoIcon />}
             <div className="mt-8 flex flex-col gap-2">
               {links.map((link, idx) => (
-                <SidebarLink key={idx} link={link} />
+                <SidebarLink key={idx} link={link}  />
               ))}
             </div>
           </div>
           <div>
             <SidebarLink
               link={{
-                label: user?.name || "User",
+                label: cookies?.name || "User",
                 href: "/Profile",
+                
                 icon: (
                   <img
                     src="/user.png"
@@ -115,6 +107,9 @@ export default function SidebarDemo(props:any) {
                 ),
               }}
             />
+            
+            
+        
           </div>
         </SidebarBody>
       </Sidebar>

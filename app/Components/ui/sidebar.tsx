@@ -171,6 +171,7 @@ export const SidebarLink = ({
         className
       )}
       {...props}
+      
     >
       {link.icon}
 
