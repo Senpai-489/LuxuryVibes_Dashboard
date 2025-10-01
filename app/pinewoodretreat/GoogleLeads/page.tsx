@@ -2,10 +2,11 @@
 import Sidebar2 from "@/app/Components/ui/sidebar2";
 import React, { useState, useEffect } from "react";
 import * as XLSX from "xlsx";
-
+import { useCookies } from "react-cookie";
+import ReturnToLogin from "@/app/Components/ReturnToLogin";
 const GoogleLeadsContent = () => {
   const [tableData, setTableData] = useState<{ headers: string[]; data: string[][] } | null>(null);
-
+  const [cookies, setCookie, removeCookie] = useCookies(['name','role']);
   // Define the headers mapping
   const headerMapping = {
     'name': 'Name',
@@ -73,7 +74,7 @@ const GoogleLeadsContent = () => {
     fetchExcel();
   }, []);
 
-  return ( <div className="flex flex-row justify-s">
+  return ( cookies.name&&cookies.role? <div className="flex flex-row justify-s">
     <Sidebar2/>
     <div className="h-screen flex overflow-scroll justify-between w-full p-6">
       <div className="flex h-full w-full gap-4 flex-col space-y-4">
@@ -132,7 +133,7 @@ const GoogleLeadsContent = () => {
         )}
       </div>
     </div>
-    </div>
+    </div>:<ReturnToLogin/>
   );
 };
 

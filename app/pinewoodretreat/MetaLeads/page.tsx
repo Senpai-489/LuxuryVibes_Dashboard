@@ -2,12 +2,14 @@
 import Sidebar2 from "@/app/Components/ui/sidebar2";
 import { Sidebar } from "@/components/ui/sidebar";
 import React, { useState, useEffect } from "react";
-
+import { useCookies } from "react-cookie";
+import ReturnToLogin from "@/app/Components/ReturnToLogin";
 import * as XLSX from 'xlsx';
-
+let response;
+let jsonData;
 const MetaLeadsContent = () => {
   const [tableData, setTableData] = useState<{ headers: string[]; data: string[][] } | null>(null);
-
+  const [cookies, setCookie, removeCookie] = useCookies(['name','role']);
   // Define the headers mapping
   const headerMapping = {
     'name': 'Name',
@@ -25,13 +27,13 @@ const MetaLeadsContent = () => {
   useEffect(() => {
     const fetchExcel = async () => {
       try {
-        const response = await fetch('');
+        response = await fetch('');
         const arrayBuffer = await response.arrayBuffer();
         const workbook = XLSX.read(arrayBuffer, { type: 'array' });
         
         const firstSheetName = workbook.SheetNames[0];
         const worksheet = workbook.Sheets[firstSheetName];
-        const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 }) as string[][];
+         jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 }) as string[][];
 
         // Get headers and their indices
         const headers = jsonData[0];
@@ -56,7 +58,7 @@ const MetaLeadsContent = () => {
     fetchExcel();
   }, []);
 
-  return (<div className="flex flex-row justify-s">
+  return (cookies.name&&cookies.role?<div className="flex flex-row justify-s">
     <Sidebar2/>
     <div className="h-screen w-full p-6">
       <div className="flex h-full flex-col space-y-4">
@@ -113,8 +115,9 @@ const MetaLeadsContent = () => {
         )}
       </div>
     </div>
-    </div>
+    </div>:<ReturnToLogin/>
   );
 };
 
 export default MetaLeadsContent;
+export {jsonData};
