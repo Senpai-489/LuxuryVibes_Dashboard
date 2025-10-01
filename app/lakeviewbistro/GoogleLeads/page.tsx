@@ -7,7 +7,7 @@ import { useCookies } from "react-cookie";
 
 const GoogleLeadsContent = () => {
   const [cookies, setCookie, removeCookie] = useCookies(['name','role']);
-  return (cookies.name&&cookies.role?<div className="flex flex-row justify-s">
+  return (cookies?.role || cookies.name ?<div className="flex flex-row justify-s">
     <Sidebar2/>
     <div className="w-full  mx-auto p-4 text-4xl">   
     Google Leads will be here </div>

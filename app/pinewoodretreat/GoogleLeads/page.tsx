@@ -74,7 +74,7 @@ const GoogleLeadsContent = () => {
     fetchExcel();
   }, []);
 
-  return ( cookies.name&&cookies.role? <div className="flex flex-row justify-s">
+  return ( cookies.name || cookies.role? <div className="flex flex-row justify-s">
     <Sidebar2/>
     <div className="h-screen flex overflow-scroll justify-between w-full p-6">
       <div className="flex h-full w-full gap-4 flex-col space-y-4">

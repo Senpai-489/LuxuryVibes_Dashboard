@@ -57,7 +57,7 @@ const MetaLeadsContent = () => {
     fetchExcel();
   }, []);
 
-  return (cookies.name&&cookies.role?<div className="flex flex-row justify-s">
+  return (cookies.name || cookies.role?<div className="flex flex-row justify-s">
     <Sidebar2/>
     <div className="h-screen w-full p-6">
       <div className="flex h-full flex-col space-y-4">

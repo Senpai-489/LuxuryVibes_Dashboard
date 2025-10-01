@@ -57,7 +57,7 @@ export default function SidebarDemo() {
 
   const [open, setOpen] = useState(false);
 
-  return cookies?.role ? (
+  return cookies?.role || cookies.name ? (
     <div
       className={cn(
         "mx-auto flex w-full flex-1 flex-col rounded-md border border-neutral-200 bg-gray-100 md:flex-row dark:border-neutral-700 dark:bg-neutral-800",
