@@ -22,7 +22,7 @@ const UserManagement: React.FC = () => {
   useEffect(() => {
     const fetchUsers = async () => {
       try {
-        const res = await fetch("http://localhost:5000/api/userManagement");
+        const res = await fetch("https://serverdash-1.onrender.com/api/userManagement");
         const users: User[] = await res.json();
         setData(users);
       } catch (err) {
@@ -44,7 +44,7 @@ const UserManagement: React.FC = () => {
     const role = (form[3] as HTMLSelectElement).value;
 
     try {
-      const res = await fetch("http://localhost:5000/api/addUser", {
+      const res = await fetch("https://serverdash-1.onrender.com/api/addUser", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ name, email, password, role }),
@@ -63,7 +63,7 @@ const UserManagement: React.FC = () => {
 
     try {
       const response = await fetch(
-        `http://localhost:5000/api/deleteUser/${encodeURIComponent(email)}`,
+        `https://serverdash-1.onrender.com/api/deleteUser/${encodeURIComponent(email)}`,
         {
           method: "DELETE",
           headers: { "Content-Type": "application/json" },
@@ -102,7 +102,7 @@ const UserManagement: React.FC = () => {
 
     try {
       const response = await fetch(
-        `http://localhost:5000/api/editUser/${selectedUser.email}`,
+        `https://serverdash-1.onrender.com/api/editUser/${selectedUser.email}`,
         {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
