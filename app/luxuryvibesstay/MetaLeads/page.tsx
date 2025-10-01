@@ -1,123 +1,133 @@
 "use client";
-import Sidebar2 from "@/app/Components/ui/sidebar2";
-import { Sidebar } from "@/components/ui/sidebar";
+
 import React, { useState, useEffect } from "react";
 import { useCookies } from "react-cookie";
+import * as XLSX from "xlsx";
+import Sidebar2 from "@/app/Components/ui/sidebar2";
 import ReturnToLogin from "@/app/Components/ReturnToLogin";
-import * as XLSX from 'xlsx';
-let response;
-let jsonData;
-const MetaLeadsContent = () => {
-  const [tableData, setTableData] = useState<{ headers: string[]; data: string[][] } | null>(null);
-  const [cookies, setCookie, removeCookie] = useCookies(['name','role']);
-  // Define the headers mapping
-  const headerMapping = {
-    'name': 'Name',
-    'phone_number': 'Phone Number',
-    'email': 'Email',
-    'whats_your_budget_per_night?': 'Budget per Night',
-    'how_many_guests_are_you_booking_for?': 'Number of Guests',
-    'preferred_check-in_date?': 'Check-in Date',
-    'preferred_check-out_date?': 'Check-out Date'
-  };
 
-  const desiredHeaders = Object.keys(headerMapping);
-  const displayHeaders = Object.values(headerMapping);
+interface TableData {
+  headers: string[];
+  data: (string | undefined)[][];
+}
+
+const headerMapping: Record<string, string> = {
+  name: "Name",
+  phone_number: "Phone Number",
+  email: "Email",
+  "whats_your_budget_per_night?": "Budget per Night",
+  "how_many_guests_are_you_booking_for?": "Number of Guests",
+  "preferred_check-in_date?": "Check-in Date",
+  "preferred_check-out_date?": "Check-out Date",
+};
+
+const desiredHeaders = Object.keys(headerMapping);
+const displayHeaders = Object.values(headerMapping);
+
+const MetaLeadsContent: React.FC = () => {
+  const [tableData, setTableData] = useState<TableData | null>(null);
+  const [cookies] = useCookies(["name", "role"]);
 
   useEffect(() => {
     const fetchExcel = async () => {
       try {
-        response = await fetch('/meta leads.xls');
-        const arrayBuffer = await response.arrayBuffer();
-        const workbook = XLSX.read(arrayBuffer, { type: 'array' });
-        
+        const res = await fetch("/meta leads.xls");
+        const arrayBuffer = await res.arrayBuffer();
+        const workbook = XLSX.read(arrayBuffer, { type: "array" });
+
         const firstSheetName = workbook.SheetNames[0];
         const worksheet = workbook.Sheets[firstSheetName];
-         jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 }) as string[][];
+        const jsonData = XLSX.utils.sheet_to_json<string[]>(worksheet, {
+          header: 1,
+        }) as string[][];
 
-        // Get headers and their indices
+        if (jsonData.length === 0) return;
+
         const headers = jsonData[0];
-        const desiredIndices = desiredHeaders.map(header => 
-          headers.findIndex(h => h.toLowerCase() === header.toLowerCase())
-        ).filter(index => index !== -1);
+        const desiredIndices = desiredHeaders
+          .map((header) =>
+            headers.findIndex(
+              (h) => h.toLowerCase().trim() === header.toLowerCase().trim()
+            )
+          )
+          .filter((index) => index !== -1);
 
-        // Filter the data to only include desired columns
-        const filteredData = jsonData.slice(1)
-          .map(row => desiredIndices.map(index => row[index]))
-          .filter(row => row.some(cell => cell)); // Remove empty rows
+        const filteredData = jsonData
+          .slice(1)
+          .map((row) => desiredIndices.map((index) => row[index]))
+          .filter((row) => row.some((cell) => cell)); // drop empty rows
 
-        setTableData({ 
+        setTableData({
           headers: displayHeaders,
-          data: filteredData
+          data: filteredData,
         });
       } catch (error) {
-        console.error('Error loading Excel file:', error);
+        console.error("Error loading Excel file:", error);
       }
     };
 
     fetchExcel();
   }, []);
 
-  return (cookies.name&&cookies.role?<div className="flex flex-row justify-s">
-    <Sidebar2/>
-    <div className="h-screen w-full p-6">
-      <div className="flex h-full flex-col space-y-4">
-        {/* Header Section */}
-        <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-bold">Meta Leads</h1>
-          
-        </div>
+  if (!cookies.name || !cookies.role) {
+    return <ReturnToLogin />;
+  }
 
-        {/* Table Section */}
-        {tableData ? (
-          <div className="relative flex-1 overflow-hidden justify-center rounded-lg border border-gray-200">
-            <div className="absolute inset-0 overflow-y-auto overflow-x-clip">
-              <table className=" border-collapse">
-                <thead>
-                  <tr className="sticky top-0 bg-gray-50">
-                    {tableData.headers.map((header, index) => (
-                      <th 
-                        key={index} 
-                        className="border-b border-gray-200 bg-gray-50 p-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                      >
-                        {header} 
-                      </th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {tableData.data.map((row, rowIndex) => (
-                    <tr 
-                      key={rowIndex} 
-                      className="hover:bg-gray-50"
-                    >
-                      {row.map((cell, cellIndex) => (
-                        <td 
-                          key={cellIndex} 
-                          className="border-b border-gray-200 p-4 text-sm text-gray-500"
+  return (
+    <div className="flex flex-row justify-start">
+      <Sidebar2 />
+      <div className="h-screen w-full p-6">
+        <div className="flex h-full flex-col space-y-4">
+          {/* Header Section */}
+          <div className="flex items-center justify-between">
+            <h1 className="text-2xl font-bold">Meta Leads</h1>
+          </div>
+
+          {/* Table Section */}
+          {tableData ? (
+            <div className="relative flex-1 overflow-hidden justify-center rounded-lg border border-gray-200">
+              <div className="absolute inset-0 overflow-y-auto overflow-x-clip">
+                <table className="border-collapse min-w-full">
+                  <thead>
+                    <tr className="sticky top-0 bg-gray-50">
+                      {tableData.headers.map((header, index) => (
+                        <th
+                          key={header + index}
+                          className="border-b border-gray-200 bg-gray-50 p-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
                         >
-                          <div className="gap-4 flex flex-row max-w-xs truncate">
-                            {cell || '-'}
-                            {/* {cell==="Sagar.R"?<div className="text-red-500 rounded-full h-4 w-4">(new)</div>:null} */}
-                          </div>
-                        </td>
+                          {header}
+                        </th>
                       ))}
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody>
+                    {tableData.data.map((row, rowIndex) => (
+                      <tr key={rowIndex} className="hover:bg-gray-50">
+                        {row.map((cell, cellIndex) => (
+                          <td
+                            key={cellIndex}
+                            className="border-b border-gray-200 p-4 text-sm text-gray-500"
+                          >
+                            <div className="gap-4 flex flex-row max-w-xs truncate">
+                              {cell || "-"}
+                            </div>
+                          </td>
+                        ))}
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             </div>
-          </div>
-        ) : (
-          <div className="flex-1 flex items-center justify-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900"></div>
-          </div>
-        )}
+          ) : (
+            <div className="flex-1 flex items-center justify-center">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900" />
+            </div>
+          )}
+        </div>
       </div>
     </div>
-    </div>:<ReturnToLogin/>
   );
 };
 
 export default MetaLeadsContent;
-export {jsonData};

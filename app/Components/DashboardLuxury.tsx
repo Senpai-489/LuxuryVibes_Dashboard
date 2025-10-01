@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { BarChart } from '@mui/x-charts/BarChart';
 import { LineChart, PieChart } from "@mui/x-charts";
 import SimpleLineChart from "./ui/Line";
-import { jsonData } from "../luxuryvibesstay/MetaLeads/page";
+
 
 
 const DashboardLuxury = () => {

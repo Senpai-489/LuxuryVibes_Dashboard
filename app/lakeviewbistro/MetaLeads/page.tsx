@@ -5,8 +5,7 @@ import React, { useState, useEffect } from "react";
 import { useCookies } from "react-cookie";
 import ReturnToLogin from "@/app/Components/ReturnToLogin";
 import * as XLSX from 'xlsx';
-let response;
-let jsonData;
+
 const MetaLeadsContent = () => {
   const [tableData, setTableData] = useState<{ headers: string[]; data: string[][] } | null>(null);
   const [cookies, setCookie, removeCookie] = useCookies(['name','role']);
@@ -27,13 +26,13 @@ const MetaLeadsContent = () => {
   useEffect(() => {
     const fetchExcel = async () => {
       try {
-        response = await fetch('');
+        const response = await fetch('');
         const arrayBuffer = await response.arrayBuffer();
         const workbook = XLSX.read(arrayBuffer, { type: 'array' });
         
         const firstSheetName = workbook.SheetNames[0];
         const worksheet = workbook.Sheets[firstSheetName];
-         jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 }) as string[][];
+         const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 }) as string[][];
 
         // Get headers and their indices
         const headers = jsonData[0];
@@ -120,4 +119,3 @@ const MetaLeadsContent = () => {
 };
 
 export default MetaLeadsContent;
-export {jsonData};
