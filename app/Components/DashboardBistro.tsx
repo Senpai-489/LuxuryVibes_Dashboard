@@ -3,16 +3,16 @@ import { BarChart } from '@mui/x-charts/BarChart';
 import { LineChart, PieChart } from "@mui/x-charts";
 import SimpleLineChart from "./ui/Line";
 
-const DashboardBistro = () => {
+
+
+const DashboardLuxury = () => {
+ 
   const cards = [
     {
       title: "Total Leads",
       value: 25024,
     },
-    {
-      title: "Today's Leads",
-      value: 2330,
-    },
+    
     {
       title: "Bot Leads",
       value: 1025,
@@ -45,13 +45,7 @@ const DashboardBistro = () => {
     <div className="flex flex-1 overflow-y-scroll h-full">
       <div className="flex h-[200vh] w-full flex-1 flex-col gap-2 rounded-tl-2xl border border-neutral-200 bg-white p-2 md:p-10 dark:border-neutral-700 dark:bg-neutral-900">
       <div className="text-3xl font-bold font-family-serif">Welcome to the Dashboard!</div>
-      <select className="w-48 p-2 border border-gray-300 rounded-lg mb-4">
-  <option>All time</option>
-  <option>Last 7 Days</option>
-  <option>Last 30 Days</option>
-  <option>Last 90 Days</option>
-  
-</select>
+      
         
         <div className="flex justify-between gap-4">
           {cards.map((i, idx) => (
@@ -62,8 +56,15 @@ const DashboardBistro = () => {
               <h1 className="text-lg p-2 font-medium text-[494949]">{i.title}</h1>
               <h1 className="text-3xl text-green-300 p-2 font-bold ">{i.value}</h1>
               <div className="bg-gray-900 h-4 m-2 w-[90%] mx-auto rounded-full">
-                <div className={`bg-green-400 h-4 rounded-full w-[60%]`}></div>
-                <div className="text-right">20%</div>
+                {(() => {
+                  const widthPercentage = (cards[idx].value / cards[0].value) * 100;
+                  return (
+                    <>
+                      <div className="bg-green-400 h-4 rounded-full" style={{ width: `${cards[idx].title != "Conversion Rate" ? widthPercentage : cards[idx].value }%` }}></div>
+                      <div className="text-right">{cards[idx].title != "Conversion Rate" ? widthPercentage.toFixed(2) : cards[idx].value.toFixed(2)}%</div>
+                    </>
+                  );
+                })()}
               </div>
             </div>
           ))}
@@ -77,8 +78,15 @@ const DashboardBistro = () => {
               <h1 className="text-lg p-2 font-medium text-[494949]">{i.title}</h1>
               <h1 className="text-3xl text-green-300 p-2 font-bold ">{i.value}</h1>
               <div className="bg-gray-900 h-4 m-2 w-[90%] mx-auto rounded-full">
-                <div className={`bg-green-400 h-4 rounded-full w-[60%]`}></div>
-                <div className="text-right">20%</div>
+                {(() => {
+                  const widthPercentage = (cards2[idx].value / cards[0].value) * 100;
+                  return (
+                  <>
+                    <div className="bg-green-400 h-4 rounded-full" style={{ width: `${widthPercentage}%` }}></div>
+                    <div className="text-right">{widthPercentage.toFixed(2)}%</div>
+                  </>
+                  );
+                })()}
               </div>
             </div>
           ))}
@@ -178,4 +186,4 @@ const Timeline = () => {
         </div>
   );
 }
-export default DashboardBistro;
+export default DashboardLuxury;
