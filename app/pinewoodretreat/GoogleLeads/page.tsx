@@ -32,7 +32,7 @@ const GoogleLeadsContent = () => {
         reader.readAsBinaryString(file);
       } else if (sheetUrl) {
         // Handle Google Sheets URL
-        const response = await fetch(`http://serverdash-1.onrender.com/api/fetchSheetData`, {
+        const response = await fetch(`https://serverdash-1.onrender.com/api/fetchSheetData`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -55,7 +55,7 @@ const GoogleLeadsContent = () => {
 
   const sendDataToServer = async (jsonData: any, sourceType: 'file' | 'url' = 'file', sourceUrl: string | null = null) => {
     try {
-      const response = await fetch('http://serverdash-1.onrender.com/api/uploadExcel', {
+      const response = await fetch('https://serverdash-1.onrender.com/api/uploadExcel', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -86,7 +86,7 @@ const GoogleLeadsContent = () => {
 
   const fetchData = async () => {
     try {
-      const response = await fetch('http://serverdash-1.onrender.com/api/getExcelData/pinewoodGoogle');
+      const response = await fetch('https://serverdash-1.onrender.com/api/getExcelData/pinewoodGoogle');
       const data = await response.json();
       setFetchedData(data);
     } catch (error) {
