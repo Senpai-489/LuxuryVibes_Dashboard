@@ -21,7 +21,7 @@ const DashboardRooftop = () => {
   }, []);
   const fetchData = async () => {
     try {
-      const response = await fetch(`http://localhost:5000/api/getExcelData/${googleSheetName}`);
+      const response = await fetch(`http://serverdash-1.onrender.com/api/getExcelData/${googleSheetName}`);
       const data = await response.json();
       setFetchedData(data);
     } catch (error) {
@@ -31,9 +31,9 @@ const DashboardRooftop = () => {
    const fetchCounts = async () => {
     try {
       const [gRes, mRes, wRes] = await Promise.all([
-        fetch(`http://localhost:5000/api/getExcelData/${googleSheetName}`),
-        fetch(`http://localhost:5000/api/getExcelData/${metaSheetName}`),
-        fetch(`http://localhost:5000/api/getExcelData/${whatsappSheetName}`),
+        fetch(`http://serverdash-1.onrender.com/api/getExcelData/${googleSheetName}`),
+        fetch(`http://serverdash-1.onrender.com/api/getExcelData/${metaSheetName}`),
+        fetch(`http://serverdash-1.onrender.com/api/getExcelData/${whatsappSheetName}`),
       ]);
 
       const [gData, mData, wData] = await Promise.all([gRes.json(), mRes.json(), wRes.json()]);
