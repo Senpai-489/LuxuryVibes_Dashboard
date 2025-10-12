@@ -99,12 +99,12 @@ const MetaLeadsContent = () => {
   }, []);
 
   return (cookies.name || cookies.role ? 
-    <div className="flex flex-row justify-s">
+    <div className="flex overflow-x-scroll flex-row justify-s">
       <Sidebar2/>
       <div className="w-full mx-auto p-4">   
         {cookies.role === 1 && <button 
           onClick={() => setUploadMenuOpen(!uploadMenuOpen)} 
-          className="bg-gray-800 text-sm float-right text-white px-4 py-2 rounded hover:bg-black transition duration-300"
+          className="bg-gray-800 fixed  text-sm float-right text-white px-4 py-2 rounded hover:bg-black transition duration-300"
         >
           Upload Data
         </button>}
@@ -146,8 +146,8 @@ const MetaLeadsContent = () => {
         )}
 
         {fetchedData ? (
-          <div className="mt-8">
-            <table className="min-w-full bg-white border border-gray-300">
+          <div className="mt-16 w-[95%] h-screen overflow-scroll max-w-full">
+            <table className="w-92 bg-white border border-gray-300">
               <thead>
                 <tr className="bg-gray-100">
                   {Object.keys(fetchedData[0] || {}).map((header, index) => (

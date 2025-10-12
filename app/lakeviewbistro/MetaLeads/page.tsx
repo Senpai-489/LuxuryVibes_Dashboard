@@ -146,7 +146,7 @@ const MetaLeadsContent = () => {
         )}
 
         {fetchedData ? (
-          <div className="mt-8">
+          <div className="mt-16 w-[95%] h-screen overflow-scroll max-w-full">
             <table className="min-w-full bg-white border border-gray-300">
               <thead>
                 <tr className="bg-gray-100">

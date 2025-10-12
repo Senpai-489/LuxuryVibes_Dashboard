@@ -21,7 +21,7 @@ const DashboardBistro = () => {
   }, []);
   const fetchData = async () => {
     try {
-      const response = await fetch(`http://serverdash-1.onrender.com/api/getExcelData/${googleSheetName}`);
+      const response = await fetch(`https://serverdash-1.onrender.com/api/getExcelData/${googleSheetName}`);
       const data = await response.json();
       setFetchedData(data);
     } catch (error) {
@@ -31,9 +31,9 @@ const DashboardBistro = () => {
    const fetchCounts = async () => {
     try {
       const [gRes, mRes, wRes] = await Promise.all([
-        fetch(`http://serverdash-1.onrender.com/api/getExcelData/${googleSheetName}`),
-        fetch(`http://serverdash-1.onrender.com/api/getExcelData/${metaSheetName}`),
-        fetch(`http://serverdash-1.onrender.com/api/getExcelData/${whatsappSheetName}`),
+        fetch(`https://serverdash-1.onrender.com/api/getExcelData/${googleSheetName}`),
+        fetch(`https://serverdash-1.onrender.com/api/getExcelData/${metaSheetName}`),
+        fetch(`https://serverdash-1.onrender.com/api/getExcelData/${whatsappSheetName}`),
       ]);
 
       const [gData, mData, wData] = await Promise.all([gRes.json(), mRes.json(), wRes.json()]);

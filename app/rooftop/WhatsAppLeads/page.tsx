@@ -104,7 +104,7 @@ const WhatsAppLeadsContent = () => {
       <div className="w-full mx-auto p-4">   
         {cookies.role === 1 && <button 
           onClick={() => setUploadMenuOpen(!uploadMenuOpen)} 
-          className="bg-gray-800 text-sm float-right text-white px-4 py-2 rounded hover:bg-black transition duration-300"
+          className="bg-gray-800 text-sm absolute top-4  float-right text-white px-4 py-2 rounded hover:bg-black transition duration-300"
         >
           Upload Data
         </button>}
@@ -146,30 +146,30 @@ const WhatsAppLeadsContent = () => {
         )}
 
         {fetchedData ? (
-          <div className="mt-8">
-            <table className="min-w-full bg-white border border-gray-300">
+            <div className="mt-16 w-[95%] h-screen overflow-scroll max-w-full">
+            <table className="w-full bg-white border border-gray-300">
               <thead>
-                <tr className="bg-gray-100">
-                  {Object.keys(fetchedData[0] || {}).map((header, index) => (
-                    <th key={index} className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      {header}
-                    </th>
-                  ))}
-                </tr>
+              <tr className="bg-gray-100">
+                {Object.keys(fetchedData[0] || {}).map((header, index) => (
+                <th key={index} className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  {header}
+                </th>
+                ))}
+              </tr>
               </thead>
               <tbody>
-                {Array.isArray(fetchedData) && fetchedData.map((row, rowIndex) => (
-                  <tr key={rowIndex} className="hover:bg-gray-50">
-                    {Object.values(row).map((cell: any, cellIndex) => (
-                      <td key={cellIndex} className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        {cell || '-'}
-                      </td>
-                    ))}
-                  </tr>
+              {Array.isArray(fetchedData) && fetchedData.map((row, rowIndex) => (
+                <tr key={rowIndex} className="hover:bg-gray-50">
+                {Object.values(row).map((cell: any, cellIndex) => (
+                  <td key={cellIndex} className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                  {cell || '-'}
+                  </td>
                 ))}
+                </tr>
+              ))}
               </tbody>
             </table>
-          </div>
+            </div>
         ) : (
           <div className="mt-4 text-center text-gray-500">No data available</div>
         )}
