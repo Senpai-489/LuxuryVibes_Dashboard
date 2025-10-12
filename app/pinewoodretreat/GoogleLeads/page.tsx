@@ -1,139 +1,181 @@
-"use client";
-import Sidebar2 from "@/app/Components/ui/sidebar2";
-import React, { useState, useEffect } from "react";
-import * as XLSX from "xlsx";
-import { useCookies } from "react-cookie";
+"use client"
+
 import ReturnToLogin from "@/app/Components/ReturnToLogin";
+import Sidebar2 from "@/app/Components/ui/sidebar2";
+import { useState, useEffect } from "react";
+import { useCookies } from "react-cookie";
+import * as XLSX from "xlsx";
+
 const GoogleLeadsContent = () => {
-  const [tableData, setTableData] = useState<{ headers: string[]; data: string[][] } | null>(null);
-  const [cookies, setCookie, removeCookie] = useCookies(['name','role']);
-  // Define the headers mapping
-  const headerMapping = {
-    'name': 'Name',
-    'contact': 'Phone Number',
-    'email': 'Email',
+  const [cookies] = useCookies(['name','role']);
+  const [uploadMenuOpen, setUploadMenuOpen] = useState(false);
+  const [file, setFile] = useState<File | null>(null);
+  const [sheetUrl, setSheetUrl] = useState('');
+  const [fetchedData, setFetchedData] = useState<any[] | null>(null);
+
+  const uploadData = async (e: React.FormEvent) => {
+    e.preventDefault();
     
-    'Date (from)': 'Check-in Date',
-    'Date (to)': 'Check-out Date',
-    'Source': 'Source',
+    try {
+      let jsonData;
+
+      if (file) {
+        // Handle file upload
+        const reader = new FileReader();
+        reader.onload = async (e) => {
+          const data = e.target?.result;
+          const workbook = XLSX.read(data, { type: 'binary' });
+          const worksheet = workbook.Sheets[workbook.SheetNames[0]];
+          jsonData = XLSX.utils.sheet_to_json(worksheet);
+          await sendDataToServer(jsonData, 'file');
+        };
+        reader.readAsBinaryString(file);
+      } else if (sheetUrl) {
+        // Handle Google Sheets URL
+        const response = await fetch(`http://localhost:5000/api/fetchSheetData`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ url: sheetUrl }),
+        });
+        
+        if (!response.ok) throw new Error('Failed to fetch sheet data');
+  jsonData = await response.json();
+  await sendDataToServer(jsonData, 'url', sheetUrl);
+      } else {
+        alert("Please provide either a file or sheet URL");
+        return;
+      }
+    } catch (error) {
+      console.error('Error uploading data:', error);
+      alert('Error uploading data. Please try again.');
+    }
   };
 
-  const desiredHeaders = Object.keys(headerMapping);
-  const displayHeaders = Object.values(headerMapping);
-  function excelSerialToJSDate(serial: number): string {
-  // Excel’s day 1 is 1900-01-01
-  const utc_days = Math.floor(serial - 25569); // offset to Unix epoch
-  const utc_value = utc_days * 86400;          // seconds
-  const date = new Date(utc_value * 1000);
-  return date.toISOString().split('T')[0];     // "YYYY-MM-DD"
-}
-  useEffect(() => {
-    const fetchExcel = async () => {
-      try {
-        const sheetId = '19cPc-1jf1c3lqu9AyCAW2n-vMSQ86MJKGRB8qqUb04U';
-        const url = `https://docs.google.com/spreadsheets/d/${sheetId}/export?format=xlsx`;
-        const response = await fetch(url);
-        const arrayBuffer = await response.arrayBuffer();
-        const workbook = XLSX.read(arrayBuffer, { type: 'array' });
-        
-        const firstSheetName = workbook.SheetNames[0];
-        const worksheet = workbook.Sheets[firstSheetName];
-        console.log(worksheet);
-        const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 }) as string[][];
+  const sendDataToServer = async (jsonData: any, sourceType: 'file' | 'url' = 'file', sourceUrl: string | null = null) => {
+    try {
+      const response = await fetch('http://localhost:5000/api/uploadExcel', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          sheetName: 'pinewoodGoogle',
+          data: jsonData,
+          uploadedBy: cookies.name,
+          sourceType: sourceType,
+          sourceUrl: sourceUrl || undefined
+        }),
+      });
 
-        // Get headers and their indices
-        const headers = jsonData[0];
-        const desiredIndices = desiredHeaders.map(header => 
-          headers.findIndex(h => h.toLowerCase() === header.toLowerCase())
-        ).filter(index => index !== -1);
-
-        // Filter the data to only include desired columns
-        const filteredData = jsonData.slice(1).map(row =>
-  desiredIndices.map((index, i) => {
-    let cell = row[index];
-    // check if this header is a date column and cell is a number
-    const header = headers[index]?.toLowerCase();
-    if (cell && typeof cell === 'number' &&
-        (header.includes('date') || header.includes('check'))) {
-      cell = excelSerialToJSDate(cell);
-    }
-    return cell;
-  })
-).filter(row => row.some(cell => cell)); // Remove empty rows
-
-        
-        setTableData({ 
-          headers: displayHeaders,
-          data: filteredData
-        });
-      } catch (error) {
-        console.error('Error loading Excel file:', error);
+      if (response.ok) {
+        alert('Data uploaded successfully!');
+        setUploadMenuOpen(false);
+        setFile(null);
+        setSheetUrl('');
+        fetchData();
+      } else {
+        const error = await response.json();
+        throw new Error(error.message);
       }
-    };
+    } catch (error) {
+      throw error;
+    }
+  };
 
-    fetchExcel();
+  const fetchData = async () => {
+    try {
+      const response = await fetch('http://localhost:5000/api/getExcelData/pinewoodGoogle');
+      const data = await response.json();
+      setFetchedData(data);
+    } catch (error) {
+      console.error('Error fetching data:', error);
+    }
+  };
+
+  useEffect(() => {
+    fetchData();
   }, []);
 
-  return ( cookies.name || cookies.role? <div className="flex flex-row justify-s">
-    <Sidebar2/>
-    <div className="h-screen flex overflow-scroll justify-between w-full p-6">
-      <div className="flex h-full w-full gap-4 flex-col space-y-4">
-        {/* Header Section */}
-        <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-bold">Google Leads</h1>
-          
-        </div>
+  return (cookies.name || cookies.role ? 
+    <div className="flex flex-row justify-s">
+      <Sidebar2/>
+      <div className="w-full mx-auto p-4">   
+        {cookies.role === 1 && <button 
+          onClick={() => setUploadMenuOpen(!uploadMenuOpen)} 
+          className="bg-gray-800 text-sm float-right text-white px-4 py-2 rounded hover:bg-black transition duration-300"
+        >
+          Upload Data
+        </button>}
 
-        {/* Table Section */}
-        {tableData ? (
-          <div className="relative flex-1   rounded-lg border border-gray-200">
-            <div className="relative flex-1 overflow-auto rounded-lg border border-gray-200">
-              <table className=" w-full table-auto border-collapse">
-                <thead>
-                  <tr className="sticky top-0 bg-gray-50">
-                    {tableData.headers.map((header, index) => (
-                      <th 
-                        key={index} 
-                        className="border-b border-gray-200 bg-gray-50 p-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                      >
-                        {header} 
-                        
-                      </th>
-                    ))}
-                   
-                  </tr>
-                </thead>
-                <tbody className="bg-white overflow-y-scroll overflow-x-auto">
-                  {tableData.data.map((row, rowIndex) => (
-                    <tr 
-                      key={rowIndex} 
-                      className="hover:bg-gray-50"
-                    >
-                      {row.map((cell, cellIndex) => (
-                        <td 
-                          key={cellIndex} 
-                          className="border-b border-gray-200 p-4 text-sm text-gray-500"
-                        >
-                          <div className="gap-4 flex flex-row max-w-xs truncate">
-                            {cell || '-'}
-                            {/* {cell==="Sagar.R"?<div className="text-red-500 rounded-full h-4 w-4">(new)</div>:null} */}
-                          </div>
-                        </td>
-                      ))}
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        ) : (
-          <div className="flex-1 flex items-center justify-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900"></div>
+        {uploadMenuOpen && (
+          <div className="absolute top-16 right-4 bg-white border border-gray-300 rounded shadow-lg p-4 z-10">
+            <h3 className="text-lg font-semibold mb-2">Upload Data</h3>
+            <form onSubmit={uploadData} className="flex flex-col">
+              <label className="mb-2 text-sm font-medium text-gray-700">Choose an Excel file:</label>
+              <input 
+                type="file" 
+                onChange={(e) => {
+                  if (e.target.files && e.target.files[0]) {
+                    setFile(e.target.files[0]);
+                    setSheetUrl(''); // Clear URL when file is selected
+                  }
+                }} 
+                className="mb-2 text-sm bg-gray-100 border border-gray-300 rounded p-2" 
+              />
+              <h1 className="text-lg text-center">OR</h1>
+              <input 
+                type="text" 
+                placeholder="Enter Sheet URL" 
+                value={sheetUrl}
+                onChange={(e) => {
+                  setSheetUrl(e.target.value);
+                  setFile(null); // Clear file when URL is entered
+                }}
+                className="mb-2 text-sm bg-gray-100 border border-gray-300 rounded p-2" 
+              />
+              <button 
+                type="submit" 
+                className="bg-gray-800 text-sm text-white px-4 py-2 rounded hover:bg-black transition duration-300"
+              >
+                Submit
+              </button>
+            </form>
           </div>
         )}
+
+        {fetchedData ? (
+          <div className="mt-8">
+            <table className="min-w-full bg-white border border-gray-300">
+              <thead>
+                <tr className="bg-gray-100">
+                  {Object.keys(fetchedData[0] || {}).map((header, index) => (
+                    <th key={index} className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      {header}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {Array.isArray(fetchedData) && fetchedData.map((row, rowIndex) => (
+                  <tr key={rowIndex} className="hover:bg-gray-50">
+                    {Object.values(row).map((cell: any, cellIndex) => (
+                      <td key={cellIndex} className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        {cell || '-'}
+                      </td>
+                    ))}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        ) : (
+          <div className="mt-4 text-center text-gray-500">No data available</div>
+        )}
       </div>
-    </div>
-    </div>:<ReturnToLogin/>
+    </div> 
+    : <ReturnToLogin/>
   );
 };
 

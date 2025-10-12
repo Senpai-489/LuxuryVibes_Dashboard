@@ -130,7 +130,7 @@ const UserManagement: React.FC = () => {
     }
   };
 
-  if (!cookies.name || !cookies.role) {
+  if (!cookies.name ) {
     return <ReturnToLogin />;
   }
 

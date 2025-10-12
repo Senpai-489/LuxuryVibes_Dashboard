@@ -5,36 +5,74 @@ import SimpleLineChart from "./ui/Line";
 
 
 
-const DashboardLuxury = () => {
- 
+const DashboardPinewood = () => {
+  const [fetchedData, setFetchedData] = useState<any[] | null>(null);
+  let googleSheetName = 'pinewoodGoogle';
+  let metaSheetName = 'pinewoodMeta';
+  let whatsappSheetName = 'pinewoodWhatsApp';
+
+    const [googleCount, setGoogleCount] = useState<number>(0);
+  const [metaCount, setMetaCount] = useState<number>(0);
+  const [whatsAppCount, setWhatsAppCount] = useState<number>(0);
+
+  React.useEffect(() => {
+    fetchData();
+     fetchCounts();
+  }, []);
+  const fetchData = async () => {
+    try {
+      const response = await fetch(`http://localhost:5000/api/getExcelData/${googleSheetName}`);
+      const data = await response.json();
+      setFetchedData(data);
+    } catch (error) {
+      console.error('Error fetching data:', error);
+    }
+  };
+   const fetchCounts = async () => {
+    try {
+      const [gRes, mRes, wRes] = await Promise.all([
+        fetch(`http://localhost:5000/api/getExcelData/${googleSheetName}`),
+        fetch(`http://localhost:5000/api/getExcelData/${metaSheetName}`),
+        fetch(`http://localhost:5000/api/getExcelData/${whatsappSheetName}`),
+      ]);
+
+      const [gData, mData, wData] = await Promise.all([gRes.json(), mRes.json(), wRes.json()]);
+
+      setGoogleCount(Array.isArray(gData) ? gData.length : 0);
+      setMetaCount(Array.isArray(mData) ? mData.length : 0);
+      setWhatsAppCount(Array.isArray(wData) ? wData.length : 0);
+    } catch (error) {
+      console.error('Error fetching counts:', error);
+    }
+  };
   const cards = [
     {
       title: "Total Leads",
-      value: 25024,
+      value: googleCount + metaCount + whatsAppCount,
     },
     
     {
       title: "Bot Leads",
-      value: 1025,
+      value: 2,
     },
     {
       title: "Webform Leads",
-      value: 1230,
+      value: 3,
     },
     {
       title: "Conversion Rate",
       value: 60,
     }
   ]
-  const cards2 =[
+   const cards2 =[
     { title: "Meta Leads",
-      value: 5690,
+      value: metaCount,
     },
     { title: "Google Leads",
-      value: 2330,
+      value: googleCount,
     },
     { title: "WhatsApp Leads",
-      value: 1025,
+      value: whatsAppCount,
     },
   ]
   let [menuItem, setMenuItem] = useState("Overview");
@@ -43,7 +81,7 @@ const DashboardLuxury = () => {
   }
   return (
     <div className="flex flex-1 overflow-y-scroll h-full">
-      <div className="flex h-[200vh] w-full flex-1 flex-col gap-2 rounded-tl-2xl border border-neutral-200 bg-white p-2 md:p-10 dark:border-neutral-700 dark:bg-neutral-900">
+      <div className="flex h-[170vh] w-full flex-1 flex-col gap-2 rounded-tl-2xl border border-neutral-200 bg-white p-2 md:p-10 dark:border-neutral-700 dark:bg-neutral-900">
       <div className="text-3xl font-bold font-family-serif">Welcome to the Dashboard!</div>
       
         
@@ -94,51 +132,35 @@ const DashboardLuxury = () => {
         <div id="tabs" className="flex gap-8 p-2 border-2 h-12 items-center rounded-lg">
           <button onClick={changeMenu} className="hover:scale-110 duration-200">Overview</button>
           <button onClick={changeMenu} className="hover:scale-110 duration-200">Sources</button>
-          <button onClick={changeMenu} className="hover:scale-110 duration-200">Timeline</button>
+          
         </div>
-        {menuItem === "Overview" ? <Overview/> : menuItem === "Sources" ? <Sources/> : <Timeline/>}
+        {menuItem === "Overview" ? <Overview data={cards} data2={cards2}/> : <Sources data={cards} data2={cards2}/> }
        
       </div>
     </div>
   );
 };
 
-const Overview = () => {
+const Overview = (props: { data: { value: number | null; }[]; data2: { value: number | null; }[]; }) => {
   return (<div>
-     <div className="flex gap-2">
-          {[...new Array(2)].map((i, idx) => (
-            <div
-              key={"second-array-demo-1" + idx}
-              className=" w-full rounded-lg bg-gray-100 dark:bg-neutral-800"
-            >
-              <BarChart className="p-4"
+     
+              <BarChart className="p-12 h-72"
                 series={[
                   {
-                    data: [4, 3, 5, 7, 8],
-                    label: 'Series 1',
+                    data: [props.data[0].value, props.data2[1].value, props.data[1].value, props.data[2].value, props.data2[0].value, props.data2[2].value],
+                    label: 'Pinewood Retreat Leads',
                   }
                 ]}
-                xAxis={[{ data: ['Jan', 'Feb', 'Mar', 'Apr', 'May'] }]}
-                height={300}
+                xAxis={[{ data: ['Total', 'Google', 'Bot', 'Webform', 'Meta', 'WhatsApp'] }]}
+                height={700}
               />
-            </div>
-          ))}
-        </div>
-        <div className="mt-4 flex  gap-2">
-          {[...new Array(2)].map((i, idx) => (
-            <div
-              key={"second-array-demo-1" + idx}
-              className="p-4 w-full rounded-lg bg-gray-100 dark:bg-neutral-800"
-            >
-              <SimpleLineChart/>
-            </div>
-          ))}
-        </div>
+            
+       
         </div>
   );
 }
 
-const Sources = () => {
+const Sources = (props: { data: { value: number | null; }[]; data2: { value: number | null; }[]; }) => {
   return (<div className="h-screen">
     <div className="flex h-[120vh]  rounded-lg ease-in-out duration-500 bg-gray-100 dark:bg-neutral-800">
       <PieChart
@@ -148,10 +170,11 @@ const Sources = () => {
       series={[
         {
         data: [
-          { value: 30, label: 'Meta' },
-          { value: 40, label: 'Google' }, 
-          { value: 30, label: 'WhatsApp' },
-          { value: 20, label: 'WebForm' }
+          { value: props.data2[0].value ?? 0, label: 'Meta' },
+          { value: props.data2[1].value ?? 0, label: 'Google' }, 
+          { value: props.data2[2].value ?? 0, label: 'WhatsApp' },
+          { value: props.data[2].value ?? 0, label: 'WebForm' },
+          { value: props.data[1].value ?? 0, label: 'Bot' },
         ],
         innerRadius: 100,
         outerRadius: 300,
@@ -186,4 +209,4 @@ const Timeline = () => {
         </div>
   );
 }
-export default DashboardLuxury;
+export default DashboardPinewood;
