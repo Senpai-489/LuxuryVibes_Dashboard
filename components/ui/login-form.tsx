@@ -17,10 +17,18 @@ export function LoginForm({
   const [passwordValue, setPasswordValue] = useState("")
   const [passWarning, setPassWarning] = useState(false)
   const { login } = useAuth()
-  const [cookies, setCookie] = useCookies(['name','role','email'])  
+  const [, setCookie] = useCookies(['name','role','email'])  
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
+    // don't enter logging state if fields are empty
+    if (!emailValue.trim() || !passwordValue.trim()) {
+      setPassWarning(true)
+      setIsLoggingIn(false)
+      return
+    }
+    setPassWarning(false)
+    setIsLoggingIn(true)
     try {
       const res = await fetch(`https://serverdash-1.onrender.com/api/login`, {
         method: "POST",
@@ -35,7 +43,7 @@ export function LoginForm({
       console.log("Login response:", data)
 
       if (res.ok) {
-        await login(data)
+        login(data)
 
         console.log("Setting cookies:", { data })
         setCookie('name', data.user.name, { path: '/' })
@@ -45,13 +53,15 @@ export function LoginForm({
       } else {
         console.error("Login failed:", data.message)
         setPassWarning(true)
+        setIsLoggingIn(false)
       }
     } catch (err) {
       console.error("Login error:", err)
       setPassWarning(true)
+      setIsLoggingIn(false);
     }
   }
-
+  let [isLoggingIn, setIsLoggingIn] = useState(false);
   return (
     <div className={cn("flex flex-col gap-6", className)} {...props}>
       <Card className="overflow-hidden p-0">
@@ -102,7 +112,7 @@ export function LoginForm({
               </div>
 
               <Button type="submit" className="w-full">
-                Login
+                {isLoggingIn ? "Logging in..." : "Login"}
               </Button>
 
               <div className="text-center text-sm">
