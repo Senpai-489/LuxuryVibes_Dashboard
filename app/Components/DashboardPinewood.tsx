@@ -7,40 +7,42 @@ import SimpleLineChart from "./ui/Line";
 
 const DashboardPinewood = () => {
   const [fetchedData, setFetchedData] = useState<any[] | null>(null);
-  let googleSheetName = 'pinewoodGoogle';
-  let metaSheetName = 'pinewoodMeta';
-  let whatsappSheetName = 'pinewoodWhatsApp';
+  let googleCompanyName = 'pinewoodGoogle';
+  let metaCompanyName = 'pinewoodMeta';
+  let whatsappCompanyName = 'pinewoodWhatsApp';
 
-    const [googleCount, setGoogleCount] = useState<number>(0);
+  const [googleCount, setGoogleCount] = useState<number>(0);
   const [metaCount, setMetaCount] = useState<number>(0);
   const [whatsAppCount, setWhatsAppCount] = useState<number>(0);
 
   React.useEffect(() => {
-    fetchData();
-     fetchCounts();
+    fetchCounts();
   }, []);
-  const fetchData = async () => {
-    try {
-      const response = await fetch(`https://serverdash-1.onrender.com/api/getExcelData/${googleSheetName}`);
-      const data = await response.json();
-      setFetchedData(data);
-    } catch (error) {
-      console.error('Error fetching data:', error);
-    }
-  };
-   const fetchCounts = async () => {
+
+  const fetchCounts = async () => {
     try {
       const [gRes, mRes, wRes] = await Promise.all([
-        fetch(`https://serverdash-1.onrender.com/api/getExcelData/${googleSheetName}`),
-        fetch(`https://serverdash-1.onrender.com/api/getExcelData/${metaSheetName}`),
-        fetch(`https://serverdash-1.onrender.com/api/getExcelData/${whatsappSheetName}`),
+        fetch(`https://serverdash-1.onrender.com/api/sheets/${googleCompanyName}`),
+        fetch(`https://serverdash-1.onrender.com/api/sheets/${metaCompanyName}`),
+        fetch(`https://serverdash-1.onrender.com/api/sheets/${whatsappCompanyName}`),
       ]);
 
-      const [gData, mData, wData] = await Promise.all([gRes.json(), mRes.json(), wRes.json()]);
+      const [gSheets, mSheets, wSheets] = await Promise.all([gRes.json(), mRes.json(), wRes.json()]);
 
-      setGoogleCount(Array.isArray(gData) ? gData.length : 0);
-      setMetaCount(Array.isArray(mData) ? mData.length : 0);
-      setWhatsAppCount(Array.isArray(wData) ? wData.length : 0);
+      // Aggregate counts from all sheets for each company
+      const gTotal = Array.isArray(gSheets) 
+        ? gSheets.reduce((sum, sheet) => sum + (sheet.data?.length || 0), 0) 
+        : 0;
+      const mTotal = Array.isArray(mSheets) 
+        ? mSheets.reduce((sum, sheet) => sum + (sheet.data?.length || 0), 0) 
+        : 0;
+      const wTotal = Array.isArray(wSheets) 
+        ? wSheets.reduce((sum, sheet) => sum + (sheet.data?.length || 0), 0) 
+        : 0;
+
+      setGoogleCount(gTotal);
+      setMetaCount(mTotal);
+      setWhatsAppCount(wTotal);
     } catch (error) {
       console.error('Error fetching counts:', error);
     }
