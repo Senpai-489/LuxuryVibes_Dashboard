@@ -5,6 +5,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "@/lib/context/AuthContext";
 import { CookiesProvider } from "react-cookie";
+import Load from "./Components/ui/Load";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -30,10 +31,14 @@ export default function RootLayout({
     <html lang="en">
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-      > 
-                <AuthProvider><CookiesProvider>{children}</CookiesProvider></AuthProvider>
-     
-
+      >
+        <Load timeout={500} />
+        <AuthProvider>
+          <CookiesProvider>
+            {children}
+          </CookiesProvider>
+        </AuthProvider>
+        
       </body>
     </html>
   );
