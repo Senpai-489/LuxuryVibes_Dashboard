@@ -15,6 +15,7 @@ const API_BASE = "https://serverdash-1.onrender.com/api";
 // Keys are data keys in your rows; values are friendly header labels.
 const HEADER_MAPPING: Record<string, Record<string, string>> = {
   luxuryMeta: {
+    state: "State",
     name: "Name",
     phone_number: "Phone Number",
     email: "Email",
@@ -24,6 +25,7 @@ const HEADER_MAPPING: Record<string, Record<string, string>> = {
     "preferred_check-out_date?": "Check-out Date",
   },
   pinewoodMeta: {
+    state: "State",
     name: "Name",
     phone_number: "Phone Number",
     email: "Email",
@@ -33,6 +35,7 @@ const HEADER_MAPPING: Record<string, Record<string, string>> = {
     "preferred_check-out_date?": "Check-out Date",
   },
   rooftopMeta: {
+    state: "State",
     name: "Name",
     phone_number: "Phone Number",
     email: "Email",
@@ -42,6 +45,7 @@ const HEADER_MAPPING: Record<string, Record<string, string>> = {
     "preferred_check-out_date?": "Check-out Date",
   },
   bistroMeta: {
+    state: "State",
     name: "Name",
     phone_number: "Phone Number",
     email: "Email",
@@ -51,6 +55,7 @@ const HEADER_MAPPING: Record<string, Record<string, string>> = {
     "preferred_check-out_date?": "Check-out Date",
   },
   luxuryWhatsApp: {
+    state: "State",
     name: "Name",
     phone_number: "Phone Number",
     email: "Email",
@@ -60,6 +65,7 @@ const HEADER_MAPPING: Record<string, Record<string, string>> = {
     "preferred_check-out_date?": "Check-out Date",
   },
   pinewoodWhatsApp: {
+    state: "State",
     name: "Name",
     phone_number: "Phone Number",
     email: "Email",
@@ -69,6 +75,7 @@ const HEADER_MAPPING: Record<string, Record<string, string>> = {
     "preferred_check-out_date?": "Check-out Date",
   },
   rooftopWhatsApp: {
+    state: "State",
     name: "Name",
     phone_number: "Phone Number",
     email: "Email",
@@ -78,6 +85,7 @@ const HEADER_MAPPING: Record<string, Record<string, string>> = {
     "preferred_check-out_date?": "Check-out Date",
   },
   bistroWhatsApp: {
+    state: "State",
     name: "Name",
     phone_number: "Phone Number",
     email: "Email",
@@ -359,6 +367,26 @@ export default function LeadsManager({ companyName }: LeadsManagerProps) {
     }
   };
 
+  const updateLeadState = async (leadId: string, newState: string) => {
+    if (!currentSheet) return;
+    try {
+      const resp = await fetch(`${API_BASE}/updateLeadState/${currentSheet.sheetId}/${leadId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ state: newState })
+      });
+      if (resp.ok) {
+        fetchData();
+      } else {
+        const err = await resp.json();
+        throw new Error(err.message);
+      }
+    } catch (e) {
+      console.error("Error updating lead state:", e);
+      alert("Failed to update lead state. Please try again.");
+    }
+  };
+
   const openContactMenu = (row: any) => {
     setSelectedContact(row);
     setContactMenuOpen(true);
@@ -383,7 +411,14 @@ export default function LeadsManager({ companyName }: LeadsManagerProps) {
         if (!internalKeys.has(k)) all.add(k);
       });
     }
-    return Array.from(all);
+    // Ensure state appears first if it exists
+    const headers = Array.from(all);
+    const stateIndex = headers.indexOf('state');
+    if (stateIndex > -1) {
+      headers.splice(stateIndex, 1);
+      headers.unshift('state');
+    }
+    return headers;
   }, [fetchedData, internalKeys]);
 
   // Final headers for table: keys used to extract values, labels for thead
@@ -606,15 +641,40 @@ export default function LeadsManager({ companyName }: LeadsManagerProps) {
             <tbody>
               {fetchedData.map((row: any, idx: number) => (
                 <tr key={row._id || idx} className="hover:bg-gray-50">
-                  {tableHeaderKeys.map((key) => (
-                    <td
-                      key={key}
-                      onClick={() => openContactMenu(row)}
-                      className="px-6 py-4 whitespace-nowrap text-sm text-gray-700 cursor-pointer"
-                    >
-                      {row?.[key] ?? "-"}
-                    </td>
-                  ))}
+                  {tableHeaderKeys.map((key) => {
+                    // Special handling for state column
+                    if (key === 'state') {
+                      return (
+                        <td key={key} className="px-6 py-4 whitespace-nowrap text-sm">
+                          <select
+                            value={row?.state || 'New'}
+                            onChange={(e) => {
+                              if (row?._id) {
+                                updateLeadState(row._id, e.target.value);
+                              }
+                            }}
+                            className="border border-gray-300 rounded px-2 py-1 text-sm bg-white cursor-pointer"
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            <option value="New">New</option>
+                            <option value="In Conversation">In Conversation</option>
+                            <option value="Converted">Converted</option>
+                            <option value="Dead Lead">Dead Lead</option>
+                          </select>
+                        </td>
+                      );
+                    }
+                    // Regular columns
+                    return (
+                      <td
+                        key={key}
+                        onClick={() => openContactMenu(row)}
+                        className="px-6 py-4 whitespace-nowrap text-sm text-gray-700 cursor-pointer"
+                      >
+                        {row?.[key] ?? "-"}
+                      </td>
+                    );
+                  })}
                   <td className="px-6 py-4 whitespace-nowrap text-sm">
                     <button
                       onClick={(e) => {
@@ -703,11 +763,11 @@ function ContactForm({ contact, onClose }: { contact: any; onClose: () => void }
 }
 
 function AddLeadForm({ onSubmit, onClose }: { onSubmit: (data: any) => void; onClose: () => void }) {
-  const [formData, setFormData] = useState<any>({});
+  const [formData, setFormData] = useState<any>({ state: 'New' });
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     onSubmit(formData);
-    setFormData({});
+    setFormData({ state: 'New' });
   };
   return (
     <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
@@ -733,6 +793,19 @@ function AddLeadForm({ onSubmit, onClose }: { onSubmit: (data: any) => void; onC
               />
             </div>
           ))}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">State</label>
+            <select
+              value={formData.state || 'New'}
+              onChange={(e) => setFormData({ ...formData, state: e.target.value })}
+              className="w-full border border-gray-300 rounded p-2"
+            >
+              <option value="New">New</option>
+              <option value="In Conversation">In Conversation</option>
+              <option value="Converted">Converted</option>
+              <option value="Dead Lead">Dead Lead</option>
+            </select>
+          </div>
           <div className="flex gap-2">
             <button type="submit" className="flex-1 bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">
               Add Lead
