@@ -11,21 +11,7 @@ type LeadsManagerProps = {
 
 const API_BASE = "https://serverdash-1.onrender.com/api";
 
-// Header mappings per company (only applied when present)
-// Keys are data keys in your rows; values are friendly header labels.
-const HEADER_MAPPING: Record<string, Record<string, string>> = {
-  luxuryMeta: {
-    state: "State",
-    name: "Name",
-    phone_number: "Phone Number",
-    email: "Email",
-    "whats_your_budget_per_night?": "Budget per Night",
-    "how_many_guests_are_you_booking_for?": "Number of Guests",
-    "preferred_check-in_date?": "Check-in Date",
-    "preferred_check-out_date?": "Check-out Date",
-  },
- 
-};
+// No header mappings: headers are derived from data dynamically
 
 export default function LeadsManager({ companyName }: LeadsManagerProps) {
   const [cookies] = useCookies(["name", "role"]);
@@ -328,10 +314,6 @@ export default function LeadsManager({ companyName }: LeadsManagerProps) {
   };
 
   const internalKeys = useMemo(() => new Set(["_id", "createdAt", "updatedAt"]), []);
-  const activeMapping = useMemo<Record<string, string> | null>(
-    () => HEADER_MAPPING[companyName] ?? null,
-    [companyName]
-  );
 
   // Dynamic headers (fallback when no mapping present)
   const computedHeaders: string[] = useMemo(() => {
@@ -354,15 +336,12 @@ export default function LeadsManager({ companyName }: LeadsManagerProps) {
 
   // Final headers for table: keys used to extract values, labels for thead
   const tableHeaderKeys: string[] = useMemo(
-    () => (activeMapping ? Object.keys(activeMapping) : computedHeaders),
-    [activeMapping, computedHeaders]
+    () => computedHeaders,
+    [computedHeaders]
   );
   const tableHeaderLabels: string[] = useMemo(
-    () =>
-      activeMapping
-        ? Object.values(activeMapping)
-        : tableHeaderKeys,
-    [activeMapping, tableHeaderKeys]
+    () => tableHeaderKeys,
+    [tableHeaderKeys]
   );
 
   const canEdit = cookies.role === 1 || cookies.role === "1";
