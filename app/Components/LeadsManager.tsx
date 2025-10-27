@@ -54,20 +54,20 @@ export default function LeadsManager({ companyName }: LeadsManagerProps) {
 
       if (Array.isArray(data) && data.length > 0 && !currentSheet) {
         setCurrentSheet(data[0]);
-        setFetchedData(data[0].data);
+        setFetchedData(Array.isArray(data[0].data) ? [...data[0].data].reverse() : data[0].data);
       }
     } catch (e) {
       console.error("Error fetching sheets:", e);
     }
   };
-
+  
   // Fetch current sheet data
   const fetchData = async () => {
     if (!currentSheet) return;
     try {
       const res = await fetch(`${API_BASE}/sheet/${currentSheet.sheetId}`);
       const data = await res.json();
-      setFetchedData(data);
+      setFetchedData(Array.isArray(data) ? [...data].reverse() : data);
     } catch (e) {
       console.error("Error fetching sheet data:", e);
     }
@@ -360,26 +360,12 @@ export default function LeadsManager({ companyName }: LeadsManagerProps) {
           .filter(Boolean) // Remove empty strings
       );
 
-      console.log(`Existing emails in sheet: ${existingEmails.size}`);
-
+      
       // Filter out duplicates from fresh data based on email
       const newLeads = freshData.filter((freshLead: any) => {
         const email = String(freshLead.email || '').trim().toLowerCase();
-        
-        // Skip if no email
-        if (!email) {
-          console.log('Skipping lead without email:', freshLead);
-          return false;
-        }
-        
-        // Check if email already exists
-        const isDuplicate = existingEmails.has(email);
-        
-        if (isDuplicate) {
-          console.log(`Duplicate found: ${email}`);
-        }
-        
-        return !isDuplicate;
+        if (!email) return false;
+        return !existingEmails.has(email);
       });
 
       console.log(`Found ${newLeads.length} new leads out of ${freshData.length} total`);
@@ -391,10 +377,16 @@ export default function LeadsManager({ companyName }: LeadsManagerProps) {
 
       // Show details of what will be added
       const confirmMessage = `Found ${newLeads.length} new lead(s) to add.\n\nExisting leads: ${existingLeads.length}\nTotal in source: ${freshData.length}\nNew leads: ${newLeads.length}\n\nAppend to sheet?`;
-      
+
       if (!confirm(confirmMessage)) {
         return;
       }
+
+      // Ensure appended leads have state="New" by default
+      const normalizedNewLeads = newLeads.map((lead: any) => ({
+        ...lead,
+        state: (lead?.state && String(lead.state).trim()) || "New",
+      }));
 
       // Send the new leads to be appended
       const appendResp = await fetch(`${API_BASE}/appendLeads`, {
@@ -402,7 +394,7 @@ export default function LeadsManager({ companyName }: LeadsManagerProps) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           sheetId: currentSheet.sheetId,
-          newLeads: newLeads,
+          newLeads: normalizedNewLeads,
           uploadedBy: cookies.name
         })
       });
