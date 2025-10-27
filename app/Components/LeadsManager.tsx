@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useCookies } from "react-cookie";
-import { IconBrandWhatsappFilled, IconMail, IconPhoneCall, IconPlus, IconTrash } from "@tabler/icons-react";
+import { IconBrandWhatsappFilled, IconEdit, IconMail, IconPhoneCall, IconPlus, IconRefresh, IconTrash } from "@tabler/icons-react";
 import * as XLSX from "xlsx";
 
 type LeadsManagerProps = {
@@ -318,6 +318,110 @@ export default function LeadsManager({ companyName }: LeadsManagerProps) {
     }
   };
 
+  const refreshSheet = async () => {
+    if (!currentSheet) {
+      alert("No sheet selected");
+      return;
+    }
+
+    if (!currentSheet.sourceUrl) {
+      alert("This sheet was not created from a URL. Cannot refresh.");
+      return;
+    }
+
+    if (!confirm(`Refresh "${currentSheet.name}" from original source? New leads will be appended.`)) {
+      return;
+    }
+
+    try {
+      // Fetch fresh data from the original URL
+      const resp = await fetch(`${API_BASE}/fetchSheetData`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ url: currentSheet.sourceUrl })
+      });
+
+      if (!resp.ok) throw new Error("Failed to fetch fresh data from source URL");
+      
+      const freshData = await resp.json();
+      
+      if (!Array.isArray(freshData) || freshData.length === 0) {
+        alert("No data found in the source URL");
+        return;
+      }
+
+      // Compare and find new leads using EMAIL as primary identifier
+      const existingLeads = currentSheet.data || [];
+      
+      // Create a Set of existing emails (case-insensitive, trimmed)
+      const existingEmails = new Set(
+        existingLeads
+          .map((lead: any) => String(lead.email || '').trim().toLowerCase())
+          .filter(Boolean) // Remove empty strings
+      );
+
+      console.log(`Existing emails in sheet: ${existingEmails.size}`);
+
+      // Filter out duplicates from fresh data based on email
+      const newLeads = freshData.filter((freshLead: any) => {
+        const email = String(freshLead.email || '').trim().toLowerCase();
+        
+        // Skip if no email
+        if (!email) {
+          console.log('Skipping lead without email:', freshLead);
+          return false;
+        }
+        
+        // Check if email already exists
+        const isDuplicate = existingEmails.has(email);
+        
+        if (isDuplicate) {
+          console.log(`Duplicate found: ${email}`);
+        }
+        
+        return !isDuplicate;
+      });
+
+      console.log(`Found ${newLeads.length} new leads out of ${freshData.length} total`);
+
+      if (newLeads.length === 0) {
+        alert("No new leads found. Sheet is already up to date!");
+        return;
+      }
+
+      // Show details of what will be added
+      const confirmMessage = `Found ${newLeads.length} new lead(s) to add.\n\nExisting leads: ${existingLeads.length}\nTotal in source: ${freshData.length}\nNew leads: ${newLeads.length}\n\nAppend to sheet?`;
+      
+      if (!confirm(confirmMessage)) {
+        return;
+      }
+
+      // Send the new leads to be appended
+      const appendResp = await fetch(`${API_BASE}/appendLeads`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          sheetId: currentSheet.sheetId,
+          newLeads: newLeads,
+          uploadedBy: cookies.name
+        })
+      });
+
+      if (appendResp.ok) {
+        const result = await appendResp.json();
+        alert(`✅ Successfully appended ${newLeads.length} new lead(s)!\n\nTotal leads now: ${result.totalCount}`);
+        fetchData();
+      } else {
+        const err = await appendResp.json();
+        throw new Error(err.message);
+      }
+    } catch (e) {
+      console.error("Error refreshing sheet:", e);
+      alert("Error refreshing sheet. Please try again.");
+    }
+  };
+
+
   const openContactMenu = (row: any) => {
     setSelectedContact(row);
     setContactMenuOpen(true);
@@ -408,6 +512,14 @@ export default function LeadsManager({ companyName }: LeadsManagerProps) {
                   className="bg-red-700 text-sm text-white px-4 py-2 rounded hover:bg-red-800 transition duration-300 flex items-center gap-2"
                 >
                   <IconTrash size={16} /> Delete Sheet
+                </button>
+                <button
+                  onClick={refreshSheet}
+                  className="bg-yellow-600 flex items-center gap-2 text-sm text-white px-4 py-2 rounded hover:bg-yellow-700 transition duration-300"
+                  disabled={!currentSheet?.sourceUrl}
+                  title={!currentSheet?.sourceUrl ? "Sheet not created from URL" : "Refresh from original source"}
+                >
+                  <IconRefresh size={16} /> Refresh Sheet
                 </button>
               </>
             )}
