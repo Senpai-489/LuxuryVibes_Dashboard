@@ -10,8 +10,10 @@ export default function WhatsAppLeadsPage() {
   if (!(cookies.name || cookies.role)) return <ReturnToLogin />;
   return (
     <div className="flex overflow-x-clip overflow-y-clip flex-row justify-s">
-      <Sidebar2 />
+      <Sidebar2>
+
       <LeadsManager companyName="luxuryWhatsApp" />
+      </Sidebar2>
     </div>
   );
 }

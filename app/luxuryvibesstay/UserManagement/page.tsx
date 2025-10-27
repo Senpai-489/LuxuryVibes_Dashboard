@@ -135,90 +135,95 @@ const UserManagement: React.FC = () => {
   }
 
   return (
-    <div className="flex flex-row justify-start">
-      <Sidebar2 />
-      <div className="w-full mx-auto p-4 text-4xl">
-        <table className="min-w-full divide-y divide-gray-200">
-          <thead className="bg-gray-50">
-            <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Name
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Email
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Role
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Actions
-              </th>
-            </tr>
-          </thead>
-          <tbody className="bg-white divide-y divide-gray-200">
-            {data.map((user) => (
-              <tr key={user.id}>
-                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                  {user.name}
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                  {user.email}
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                  {user.role === 1 ? "Manager" : "Employee"}
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                  {cookies.role === 1 ? (
-                    <>
-                      <button
-                        type="button"
-                        className="text-indigo-600 hover:text-indigo-900"
-                        onClick={() => handleEditClick(user)}
-                      >
-                        Edit
-                      </button>
-                      <button
-                        type="button"
-                        className="ml-4 text-red-600 hover:text-red-900"
-                        onClick={() => deleteUser(user.email)}
-                      >
-                        Delete
-                      </button>
-                    </>
-                  ) : (
-                    <span>N/A</span>
-                  )}
-                </td>
+    <div className="flex min-h-screen w-full">
+      <Sidebar2>
+      <div className="flex flex-1 flex-col rounded-tl-2xl border border-neutral-200 bg-white p-4 sm:p-6 md:p-8 dark:border-neutral-700 dark:bg-neutral-900">
+        <h1 className="mb-6 text-xl sm:text-2xl md:text-3xl font-semibold">User Management</h1>
+        
+        {/* Responsive table container */}
+        <div className="overflow-x-auto">
+          <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+            <thead className="bg-gray-50 dark:bg-gray-800">
+              <tr>
+                <th className="px-4 sm:px-6 py-3 text-left text-xs sm:text-sm font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                  Name
+                </th>
+                <th className="px-4 sm:px-6 py-3 text-left text-xs sm:text-sm font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                  Email
+                </th>
+                <th className="px-4 sm:px-6 py-3 text-left text-xs sm:text-sm font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                  Role
+                </th>
+                <th className="px-4 sm:px-6 py-3 text-left text-xs sm:text-sm font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                  Actions
+                </th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody className="bg-white divide-y divide-gray-200 dark:bg-gray-900 dark:divide-gray-700">
+              {data.map((user) => (
+                <tr key={user.id} className="hover:bg-gray-50 dark:hover:bg-gray-800">
+                  <td className="px-4 sm:px-6 py-4 whitespace-nowrap text-xs sm:text-sm font-medium text-gray-900 dark:text-gray-100">
+                    {user.name}
+                  </td>
+                  <td className="px-4 sm:px-6 py-4 whitespace-nowrap text-xs sm:text-sm text-gray-500 dark:text-gray-400">
+                    {user.email}
+                  </td>
+                  <td className="px-4 sm:px-6 py-4 whitespace-nowrap text-xs sm:text-sm text-gray-500 dark:text-gray-400">
+                    {user.role === 1 ? "Manager" : "Employee"}
+                  </td>
+                  <td className="px-4 sm:px-6 py-4 whitespace-nowrap text-xs sm:text-sm">
+                    {cookies.role === 1 ? (
+                      <div className="flex gap-2 sm:gap-4">
+                        <button
+                          type="button"
+                          className="text-indigo-600 hover:text-indigo-900 dark:text-indigo-400 dark:hover:text-indigo-300"
+                          onClick={() => handleEditClick(user)}
+                        >
+                          Edit
+                        </button>
+                        <button
+                          type="button"
+                          className="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300"
+                          onClick={() => deleteUser(user.email)}
+                        >
+                          Delete
+                        </button>
+                      </div>
+                    ) : (
+                      <span>N/A</span>
+                    )}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
 
         {cookies.role === 1 && (
           <button
             type="button"
-            className="mt-4 px-4 py-2 text-sm bg-gray-700 text-white rounded-lg hover:bg-black duration-150"
+            className="mt-6 px-4 py-2 text-sm sm:text-base bg-gray-700 text-white rounded-lg hover:bg-black duration-150"
             onClick={() => setAddMenu(!addMenu)}
           >
             Add User
           </button>
         )}
 
-        {/* Add User Modal */}
+        {/* Responsive Add User Modal */}
         {addMenu && (
-          <div className="fixed inset-0 flex items-center justify-center bg-transparent">
-            <div className="bg-white w-92 p-8 rounded-lg shadow-xl">
-              <div className="flex justify-between">
-                <p className="text-lg">Add New User</p>
+          <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 p-4 z-50">
+            <div className="bg-white dark:bg-gray-800 w-full max-w-md p-4 sm:p-6 md:p-8 rounded-lg shadow-xl">
+              <div className="flex justify-between items-center mb-4">
+                <p className="text-base sm:text-lg font-semibold dark:text-white">Add New User</p>
                 <button
                   type="button"
-                  className="text-red-600 text-lg hover:text-red-900"
+                  className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300"
                   onClick={() => setAddMenu(false)}
                 >
-                  X
+                  <span className="text-xl">×</span>
                 </button>
               </div>
-              <form className="space-y-4 mt-4">
+              <form className="space-y-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700">
                     Name
@@ -255,10 +260,10 @@ const UserManagement: React.FC = () => {
                     <option value="0">Employee</option>
                   </select>
                 </div>
-                <div className="flex justify-center">
+                <div className="flex justify-end gap-3 mt-6">
                   <button
                     type="submit"
-                    className="px-4 py-2 text-lg bg-gray-700 text-white rounded-md hover:bg-black duration-150"
+                    className="px-4 py-2 text-sm sm:text-base bg-gray-700 text-white rounded-md hover:bg-black duration-150"
                     onClick={addUser}
                   >
                     Add User
@@ -269,24 +274,24 @@ const UserManagement: React.FC = () => {
           </div>
         )}
 
-        {/* Edit User Modal */}
+        {/* Responsive Edit User Modal */}
         {editMenu && selectedUser && (
-          <div className="fixed inset-0 flex items-center justify-center bg-transparent bg-opacity-50">
-            <div className="bg-white w-92 p-8 rounded-lg shadow-xl">
-              <div className="flex justify-between">
-                <p className="text-lg">Edit User</p>
+          <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 p-4 z-50">
+            <div className="bg-white dark:bg-gray-800 w-full max-w-md p-4 sm:p-6 md:p-8 rounded-lg shadow-xl">
+              <div className="flex justify-between items-center mb-4">
+                <p className="text-base sm:text-lg font-semibold dark:text-white">Edit User</p>
                 <button
                   type="button"
-                  className="text-red-600 text-lg hover:text-red-900"
+                  className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300"
                   onClick={() => {
                     setEditMenu(false);
                     setSelectedUser(null);
                   }}
                 >
-                  X
+                  <span className="text-xl">×</span>
                 </button>
               </div>
-              <form onSubmit={editUser} className="space-y-4 mt-4">
+              <form onSubmit={editUser} className="space-y-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700">
                     Name
@@ -333,10 +338,10 @@ const UserManagement: React.FC = () => {
                     <option value="0">Employee</option>
                   </select>
                 </div>
-                <div className="flex justify-end gap-4">
+                <div className="flex justify-end gap-3 mt-6">
                   <button
                     type="button"
-                    className="px-4 py-2 text-sm bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300"
+                    className="px-4 py-2 text-sm sm:text-base bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300 dark:bg-gray-700 dark:text-white dark:hover:bg-gray-600"
                     onClick={() => {
                       setEditMenu(false);
                       setSelectedUser(null);
@@ -346,7 +351,7 @@ const UserManagement: React.FC = () => {
                   </button>
                   <button
                     type="submit"
-                    className="px-4 py-2 text-sm bg-gray-700 text-white rounded-md hover:bg-black"
+                    className="px-4 py-2 text-sm sm:text-base bg-gray-700 text-white rounded-md hover:bg-black duration-150"
                   >
                     Update User
                   </button>
@@ -356,6 +361,7 @@ const UserManagement: React.FC = () => {
           </div>
         )}
       </div>
+      </Sidebar2>
     </div>
   );
 };

@@ -1,9 +1,22 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { BarChart } from '@mui/x-charts/BarChart';
 import { LineChart, PieChart } from "@mui/x-charts";
 import SimpleLineChart from "./ui/Line";
 
-
+const useContainerWidth = () => {
+  const ref = React.useRef<HTMLDivElement | null>(null);
+  const [width, setWidth] = React.useState(800);
+  React.useEffect(() => {
+    if (!ref.current) return;
+    const ro = new ResizeObserver((entries) => {
+      const w = entries[0]?.contentRect?.width ?? 800;
+      setWidth(Math.max(280, w));
+    });
+    ro.observe(ref.current);
+    return () => ro.disconnect();
+  }, []);
+  return { ref, width };
+};
 
 const DashboardBistro = () => {
   const [fetchedData, setFetchedData] = useState<any[] | null>(null);
@@ -144,53 +157,65 @@ const DashboardBistro = () => {
 };
 
 const Overview = (props: { data: { value: number | null; }[]; data2: { value: number | null; }[]; }) => {
-  return (<div>
-     
-              <BarChart className="p-12 h-72"
-                series={[
-                  {
-                    data: [props.data[0].value, props.data2[1].value, props.data[1].value, props.data[2].value, props.data2[0].value, props.data2[2].value],
-                    label: 'Bistro Leads',
-                  }
-                ]}
-                xAxis={[{ data: ['Total', 'Google', 'Bot', 'Webform', 'Meta', 'WhatsApp'] }]}
-                height={700}
-              />
-            
-       
-        </div>
+  const { ref, width } = useContainerWidth();
+  const chartWidth = Math.min(1200, width);
+  const chartHeight = Math.max(260, Math.min(520, Math.round(chartWidth * 0.55)));
+
+  return (
+    <div className="w-full">
+      <div ref={ref} className="w-full rounded-lg bg-gray-100 dark:bg-neutral-800 p-3 sm:p-4">
+        <BarChart
+          width={chartWidth}
+          height={chartHeight}
+          series={[
+            {
+              data: [props.data[0].value, props.data2[1].value, props.data[1].value, props.data[2].value, props.data2[0].value, props.data2[2].value],
+              label: 'Bistro Leads',
+            }
+          ]}
+          xAxis={[{ data: ['Total', 'Google', 'Bot', 'Webform', 'Meta', 'WhatsApp'], scaleType: 'band' }]}
+          margin={{ top: 16, right: 16, bottom: 36, left: 36 }}
+        />
+      </div>
+    </div>
   );
 }
 
 const Sources = (props: { data: { value: number | null; }[]; data2: { value: number | null; }[]; }) => {
-  return (<div className="h-screen">
-    <div className="flex h-[120vh]  rounded-lg ease-in-out duration-500 bg-gray-100 dark:bg-neutral-800">
-      <PieChart
-      
-      width={800}
-      height={800}
-      series={[
-        {
-        data: [
-          { value: props.data2[0].value ?? 0, label: 'Meta' },
-          { value: props.data2[1].value ?? 0, label: 'Google' }, 
-          { value: props.data2[2].value ?? 0, label: 'WhatsApp' },
-          { value: props.data[2].value ?? 0, label: 'WebForm' },
-          { value: props.data[1].value ?? 0, label: 'Bot' },
-        ],
-        innerRadius: 100,
-        outerRadius: 300,
-        paddingAngle: 5,
-        cornerRadius: 5,
-        startAngle: 0,
-        endAngle: 360,
-        cx: 300,
-        cy: 400,
-        }
-      ]}
-      />
+  const { ref, width } = useContainerWidth();
+  const size = Math.max(280, Math.min(640, width));
+  const innerRadius = Math.round(size * 0.18);
+  const outerRadius = Math.round(size * 0.42);
+  const center = Math.round(size / 2);
+
+  return (
+    <div className="w-full">
+      <div ref={ref} className="flex justify-center items-center rounded-lg bg-gray-100 dark:bg-neutral-800 p-3 sm:p-4">
+        <PieChart
+          width={size}
+          height={size}
+          series={[
+            {
+              data: [
+                { value: props.data2[0].value ?? 0, label: 'Meta' },
+                { value: props.data2[1].value ?? 0, label: 'Google' },
+                { value: props.data2[2].value ?? 0, label: 'WhatsApp' },
+                { value: props.data[2].value ?? 0, label: 'WebForm' },
+                { value: props.data[1].value ?? 0, label: 'Bot' },
+              ],
+              innerRadius,
+              outerRadius,
+              paddingAngle: 5,
+              cornerRadius: 5,
+              startAngle: 0,
+              endAngle: 360,
+              cx: center,
+              cy: center,
+            }
+          ]}
+        />
+      </div>
     </div>
-        </div>
   );
 }
 

@@ -18,7 +18,9 @@ import { title } from "process";
 import { validateHeaderName } from "http";
 import { useCookies } from "react-cookie";
 
-export default function Sidebar2(props:any) {
+export default function Sidebar2(props: {
+  children?: React.ReactNode;  // Add type for children prop
+}) {
   const [cookies, setCookie, removeCookie] = useCookies(['name','role']);
   const links = [
     {
@@ -63,7 +65,7 @@ export default function Sidebar2(props:any) {
     <div
       className={cn(
         "mx-auto flex w-screen  flex-1 sticky flex-col rounded-md border border-neutral-200 bg-gray-300 md:flex-row dark:border-neutral-700 dark:bg-neutral-800",
-        "h-screen", // for your use case, use `h-screen` instead of `h-[60vh]`
+        "h-screen"
       )}
     >
       <Sidebar open={open} setOpen={setOpen}>
@@ -95,7 +97,8 @@ export default function Sidebar2(props:any) {
           </div>
         </SidebarBody>
       </Sidebar>
-    
+      {/* Add children prop rendering here */}
+      {props.children}
     </div>
   );
 }
