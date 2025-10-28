@@ -459,7 +459,7 @@ export default function LeadsManager({ companyName }: LeadsManagerProps) {
   return (
     <div className="w-full mx-auto p-4">
       {/* Controls */}
-      <div className="flex flex-wrap gap-3 items-center mb-4">
+     <div className="flex flex-wrap gap-3 items-center mb-4">
         <select
           value={currentSheet?.sheetId || ""}
           onChange={(e) => {
@@ -475,6 +475,18 @@ export default function LeadsManager({ companyName }: LeadsManagerProps) {
             </option>
           ))}
         </select>
+
+       {/* Refresh is visible to all roles */}
+       {currentSheet && (
+         <button
+           onClick={refreshSheet}
+           className="bg-yellow-600 flex items-center gap-2 text-sm text-white px-4 py-2 rounded hover:bg-yellow-700 transition duration-300"
+           disabled={!currentSheet?.sourceUrl}
+           title={!currentSheet?.sourceUrl ? "Sheet not created from URL" : "Refresh from original source"}
+         >
+           <IconRefresh size={16} /> Refresh Sheet
+         </button>
+       )}
 
         {canEdit && (
           <>
@@ -505,20 +517,11 @@ export default function LeadsManager({ companyName }: LeadsManagerProps) {
                 >
                   <IconTrash size={16} /> Delete Sheet
                 </button>
-                <button
-                  onClick={refreshSheet}
-                  className="bg-yellow-600 flex items-center gap-2 text-sm text-white px-4 py-2 rounded hover:bg-yellow-700 transition duration-300"
-                  disabled={!currentSheet?.sourceUrl}
-                  title={!currentSheet?.sourceUrl ? "Sheet not created from URL" : "Refresh from original source"}
-                >
-                  <IconRefresh size={16} /> Refresh Sheet
-                </button>
               </>
             )}
           </>
         )}
       </div>
-
       {/* Sheet meta */}
       {currentSheet && (
         <div className="border-b mt-2 border-gray-200 py-2">
