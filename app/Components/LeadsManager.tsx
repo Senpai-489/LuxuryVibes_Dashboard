@@ -24,7 +24,48 @@ const HEADER_MAPPING: Record<string, Record<string, string>> = {
     "preferred_check-in_date?": "Check-in Date",
     "preferred_check-out_date?": "Check-out Date",
   },
- 
+  pinewoodMeta: {
+    state: "State",
+    name: "Name",
+    phone_number: "Phone Number",
+    email: "Email",
+    "whats_your_budget_per_night?": "Budget per Night",
+    "how_many_guests_are_you_booking_for?": "Number of Guests",
+    "preferred_check-in_date?": "Check-in Date",
+    "preferred_check-out_date?": "Check-out Date",
+  },
+  bistroMeta: {
+    state: "State",
+    name: "Name",
+    phone_number: "Phone Number",
+    email: "Email",
+    "whats_your_budget_per_night?": "Budget per Night",
+    "how_many_guests_are_you_booking_for?": "Number of Guests",
+    "preferred_check-in_date?": "Check-in Date",
+    "preferred_check-out_date?": "Check-out Date",
+  },
+  rooftopMeta: {
+    state: "State",
+    name: "Name",
+    phone_number: "Phone Number",
+    email: "Email",
+    "whats_your_budget_per_night?": "Budget per Night",
+    "how_many_guests_are_you_booking_for?": "Number of Guests",
+    "preferred_check-in_date?": "Check-in Date",
+    "preferred_check-out_date?": "Check-out Date",
+  },
+};
+
+// Default mapping for any "*Meta" company when a specific mapping isn't provided
+const DEFAULT_META_MAPPING: Record<string, string> = {
+  state: "State",
+  name: "Name",
+  phone_number: "Phone Number",
+  email: "Email",
+  "whats_your_budget_per_night?": "Budget per Night",
+  "how_many_guests_are_you_booking_for?": "Number of Guests",
+  "preferred_check-in_date?": "Check-in Date",
+  "preferred_check-out_date?": "Check-out Date",
 };
 
 export default function LeadsManager({ companyName }: LeadsManagerProps) {
@@ -425,6 +466,24 @@ export default function LeadsManager({ companyName }: LeadsManagerProps) {
 
   const internalKeys = useMemo(() => new Set(["_id", "createdAt", "updatedAt"]), []);
 
+  const normalizedCompany = (companyName || "").toLowerCase();
+  const isMetaCompany = normalizedCompany.endsWith("meta");
+
+  const headerMapping = useMemo<Record<string, string> | null>(() => {
+    // Prefer explicit mapping if present; otherwise use default mapping for any Meta company
+    if (HEADER_MAPPING[companyName]) return HEADER_MAPPING[companyName];
+    if (isMetaCompany) return DEFAULT_META_MAPPING;
+    return null;
+  }, [companyName, isMetaCompany]);
+
+  const toLabel = (key: string) => {
+    // fallback label formatter
+    return key
+      .replace(/_/g, " ")
+      .replace(/\s+/g, " ")
+      .replace(/\b\w/g, (m) => m.toUpperCase());
+  };
+
   // Dynamic headers (fallback when no mapping present)
   const computedHeaders: string[] = useMemo(() => {
     if (!Array.isArray(fetchedData) || fetchedData.length === 0) return [];
@@ -434,24 +493,49 @@ export default function LeadsManager({ companyName }: LeadsManagerProps) {
         if (!internalKeys.has(k)) all.add(k);
       });
     }
-    // Ensure state appears first if it exists
     const headers = Array.from(all);
-    const stateIndex = headers.indexOf('state');
+    // ensure state first if it exists in the data
+    const stateIndex = headers.indexOf("state");
     if (stateIndex > -1) {
       headers.splice(stateIndex, 1);
-      headers.unshift('state');
+      headers.unshift("state");
     }
     return headers;
   }, [fetchedData, internalKeys]);
 
-  // Final headers for table: keys used to extract values, labels for thead
-  const tableHeaderKeys: string[] = useMemo(
-    () => computedHeaders,
-    [computedHeaders]
-  );
+  // Reorder keys: for Meta sheets show ONLY mapped headers (hide others). For non-Meta, keep existing behavior.
+  const tableHeaderKeys: string[] = useMemo(() => {
+    // If it's a Meta sheet (identified by mapping), only include mapped keys (in order), optionally 'state' first.
+    if (headerMapping) {
+      const mappingKeys = Object.keys(headerMapping);
+      const setComputed = new Set(computedHeaders);
+      const ordered: string[] = [];
+
+      // State first if present in data (or if explicitly in mapping and you want to always show it)
+      if (setComputed.has("state") || mappingKeys.includes("state")) {
+        ordered.push("state");
+      }
+
+      // Then only the keys defined by the mapping (hide all other headers)
+      for (const k of mappingKeys) {
+        if (k === "state") continue;
+        if (setComputed.has(k)) ordered.push(k);
+      }
+      return ordered;
+    }
+
+    // Non-Meta: show all discovered headers as before
+    return computedHeaders;
+  }, [computedHeaders, headerMapping]);
+
   const tableHeaderLabels: string[] = useMemo(
-    () => tableHeaderKeys,
-    [tableHeaderKeys]
+    () =>
+      tableHeaderKeys.map((k) => {
+        if (headerMapping && headerMapping[k]) return headerMapping[k];
+        if (k === "state") return "State";
+        return toLabel(k);
+      }),
+    [tableHeaderKeys, headerMapping]
   );
 
   const canEdit = cookies.role === 1 || cookies.role === "1";
@@ -534,7 +618,7 @@ export default function LeadsManager({ companyName }: LeadsManagerProps) {
 
       {/* Modals */}
       {contactMenuOpen && selectedContact && (
-        <ContactForm contact={selectedContact} onClose={closeContactMenu} />
+        <ContactForm contact={selectedContact} onClose={closeContactMenu} isMeta={isMetaCompany} />
       )}
 
       {addLeadMenuOpen && (
@@ -673,12 +757,11 @@ export default function LeadsManager({ companyName }: LeadsManagerProps) {
               {fetchedData.map((row: any, idx: number) => (
                 <tr key={row._id || idx} className="hover:bg-gray-50">
                   {tableHeaderKeys.map((key) => {
-                    // Special handling for state column
-                    if (key === 'state') {
+                    if (key === "state") {
                       return (
                         <td key={key} className="px-6 py-4 whitespace-nowrap text-sm">
                           <select
-                            value={row?.state || 'New'}
+                            value={row?.state || "New"}
                             onChange={(e) => {
                               if (row?._id) {
                                 updateLeadState(row._id, e.target.value);
@@ -695,14 +778,21 @@ export default function LeadsManager({ companyName }: LeadsManagerProps) {
                         </td>
                       );
                     }
-                    // Regular columns
+
+                    // Meta-only: strip first two characters for phone_number display
+                    const rawVal = row?.[key];
+                    const displayVal =
+                      isMetaCompany && key === "phone_number"
+                        ? (rawVal != null ? String(rawVal).slice(2) : "-")
+                        : (rawVal ?? "-");
+
                     return (
                       <td
                         key={key}
                         onClick={() => openContactMenu(row)}
                         className="px-6 py-4 whitespace-nowrap text-sm text-gray-700 cursor-pointer"
                       >
-                        {row?.[key] ?? "-"}
+                        {displayVal}
                       </td>
                     );
                   })}
@@ -743,7 +833,7 @@ export default function LeadsManager({ companyName }: LeadsManagerProps) {
   );
 }
 
-function ContactForm({ contact, onClose }: { contact: any; onClose: () => void }) {
+function ContactForm({ contact, onClose, isMeta }: { contact: any; onClose: () => void, isMeta?: boolean }) {
   const name = contact?.name || "N/A";
   const email = contact?.email || "";
   const phone = contact?.phone_number || "";
