@@ -863,7 +863,10 @@ function ContactForm({ contact, onClose, isMeta }: { contact: any; onClose: () =
             <p className="text-lg">{phone || "N/A"}</p>
             {phone && (
               <div className="flex gap-2">
-                <a href={`tel:${phone}`} className="text-blue-600 hover:text-blue-800">
+                <a
+                  href={`tel:${isMeta ? phone.slice(2) : phone}`}
+                  className="text-blue-600 hover:text-blue-800"
+                >
                   <IconPhoneCall size={20} />
                 </a>
                 <a
